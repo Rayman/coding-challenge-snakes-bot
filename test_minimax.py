@@ -1,8 +1,8 @@
 import numpy as np
 
 from .minimax import moves_with_scores
-from ..constants import Move
-from ..snake import Snake
+from ...constants import Move
+from ...snake import Snake
 
 
 def test_minimax():
