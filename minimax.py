@@ -61,7 +61,10 @@ class Node:
     def heuristic_value(self):
         if self.is_terminal_node():
             return -99
-        return len(self.player) - len(self.opponent)
+
+        length_difference = len(self.player) - len(self.opponent)
+        candy_difference = self._distance_to_candy(self.opponent) - self._distance_to_candy(self.player)
+        return length_difference + 0.01 * candy_difference
 
     def children(self):
         for move in MOVE_VALUE_TO_DIRECTION.values():
@@ -73,6 +76,12 @@ class Node:
             else:
                 player.move(move)
             yield Node(self.grid_size, player, self.player, self.candies)
+
+    def _distance_to_candy(self, snake):
+        if self.candies:
+            return min(np.linalg.norm(snake[0] - c, 1) for c in self.candies)
+        else:
+            return 0
 
     def __str__(self):
         grid = np.empty(self.grid_size, dtype=str)
@@ -108,15 +117,15 @@ class MiniMax(Bot):
 
     @property
     def name(self):
-        return 'Minimax'
+        return 'Slifer the Sky Dragon'
 
-    def determine_next_move(self, snakes, candies) -> Move:
-        player = [snake for snake in snakes if snake.id == self.id]
-        opponent = [snake for snake in snakes if snake.id != self.id]
-        assert len(player) == 1
-        assert len(opponent) == 1
-        player = player[0]
-        opponent = opponent[0]
+    @property
+    def contributor(self):
+        return 'Rayman'
+
+    def determine_next_move(self, snake, other_snakes, candies) -> Move:
+        player = snake
+        opponent = other_snakes[0]
 
         max_score = float('-inf')
         moves = []
