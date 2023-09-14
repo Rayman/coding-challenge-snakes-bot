@@ -14,6 +14,10 @@ def shortest_path(start, goal, grid):
     assert is_on_grid(start, grid.shape)
     assert is_on_grid(goal, grid.shape)
 
+    if grid[goal[0], goal[1]]:
+        # goal is blocked
+        return None
+
     g_scores = np.full_like(grid, np.iinfo(int).max, dtype=int)
     g_scores[start[0], start[1]] = 0
 
