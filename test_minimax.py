@@ -10,7 +10,7 @@ def round_values(moves):
         moves[move] = round(moves[move])
 
 
-class TestCorner():
+class TestCorner:
     grid_size = (3, 3)
     """
     It's player 0 turn. If you move into corner, you will die
@@ -79,3 +79,31 @@ def test_minimax_candies():
     moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
 
     assert 1 > moves[Move.RIGHT] > moves[Move.DOWN] > 0
+
+
+def test_suicide():
+    grid_size = (5, 3)
+    """
+    It's player 0 turn. If you suicide you win
+    |0 0 0 0 0 |
+    |          |     
+    |1 1       | 
+    """
+    player = Snake(id=0, positions=np.array([
+        [4, 2],
+        [3, 2],
+        [2, 2],
+        [1, 2],
+        [0, 2],
+    ]))
+    opponent = Snake(id=1, positions=np.array([
+        [1, 0],
+        [0, 0],
+    ]))
+    candies = []
+
+    moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
+    print(moves)
+
+    assert moves[Move.LEFT] == 99
+    assert moves[Move.LEFT] > moves[Move.DOWN]

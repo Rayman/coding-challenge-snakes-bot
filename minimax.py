@@ -15,7 +15,7 @@ def moves_with_scores(grid_size, player, opponent, candies, depth):
         move = move_to_enum(child.opponent[0] - player[0])
         # print(f'evaluating move={move}')
         value = -negamax(child, depth)
-        # print()
+        # print(f'evaluation result for move={move} value={value}')
         yield move, value
 
 
@@ -36,13 +36,23 @@ def negamax(node, depth):
 
 
 class TerminalNode:
-    def __init__(self, player, opponent, heuristic_value):
+    """
+    Game state where the current player can't move anymore because the opponent died
+    """
+
+    def __init__(self, player, opponent):
         self.player = player
         self.opponent = opponent
-        self._heuristic_value = heuristic_value
 
     def heuristic_value(self):
-        return self._heuristic_value
+        player_score = len(self.player) * 2
+        opponent_score = len(self.opponent)
+        if player_score > opponent_score:
+            return 99
+        elif player_score < opponent_score:
+            return -99
+        else:
+            return 50
 
     def __str__(self):
         return f'[[ player {self.player.id} has won ]]'
@@ -89,11 +99,11 @@ class Node:
                     break
             if self_collision:
                 # print(f'snake {player.id} collided with itself')
-                yield TerminalNode(self.opponent, player, 99)
+                yield TerminalNode(self.opponent, player)
                 continue
             if self.opponent.collides(player[0]):
                 # print(f'snake {player.id} collided with the opponent')
-                yield TerminalNode(self.opponent, player, 99)
+                yield TerminalNode(self.opponent, player)
                 continue
             yield Node(self.grid_size, self.opponent, player, self.candies)
 
@@ -164,10 +174,10 @@ class MiniMax(Bot):
 
         max_score = float('-inf')
         moves = []
-        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 2):
+        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 0):
             if score > max_score:
                 max_score = score
                 moves = [move]
-            if score == max_score:
+            elif score == max_score:
                 moves.append(move)
         return choice(moves)
