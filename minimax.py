@@ -4,6 +4,7 @@ from typing import List
 
 import numpy as np
 
+from .shortest_path import shortest_path
 from ...bot import Bot
 from ...constants import MOVE_VALUE_TO_DIRECTION, Move
 from ...snake import Snake
@@ -70,9 +71,20 @@ class Node:
         self.candies = candies
 
     def heuristic_value(self):
+        collision_grid = np.zeros(self.grid_size, dtype=bool)
+        for segment in self.player:
+            collision_grid[segment[0], segment[1]] = True
+        for segment in self.opponent:
+            collision_grid[segment[0], segment[1]] = True
+
         length_difference = len(self.player) - len(self.opponent)
-        candy_difference = self._distance_to_candy(self.opponent) - self._distance_to_candy(self.player)
-        return length_difference + 0.01 * candy_difference
+
+        distance_player_candy = self._distance_to_candy(self.player, collision_grid)
+        distance_opponent_candy = self._distance_to_candy(self.opponent, collision_grid)
+        player_candy_bonus = -min(40, distance_player_candy)
+        opponent_candy_bonus = -min(40, distance_opponent_candy)
+
+        return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)
         # return length_difference
 
     def children(self):
@@ -107,11 +119,17 @@ class Node:
                 continue
             yield Node(self.grid_size, self.opponent, player, self.candies)
 
-    def _distance_to_candy(self, snake):
-        if self.candies:
-            return min(np.linalg.norm(snake[0] - c, 1) for c in self.candies)
-        else:
+    def _distance_to_candy(self, snake, grid: np.array):
+        if not self.candies:
             return 0
+
+        shortest = np.inf
+        for candy in self.candies:
+            length = shortest_path(snake[0], candy, grid)
+            if length is not None and length < shortest:
+                shortest = length
+
+        return shortest
 
     def __str__(self):
         grid = np.empty(self.grid_size, dtype=str)
