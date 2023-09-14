@@ -70,23 +70,6 @@ class Node:
         self.opponent = opponent
         self.candies = candies
 
-    def heuristic_value(self):
-        collision_grid = np.zeros(self.grid_size, dtype=bool)
-        for segment in self.player:
-            collision_grid[segment[0], segment[1]] = True
-        for segment in self.opponent:
-            collision_grid[segment[0], segment[1]] = True
-
-        length_difference = len(self.player) - len(self.opponent)
-
-        distance_player_candy = self._distance_to_candy(self.player, collision_grid)
-        distance_opponent_candy = self._distance_to_candy(self.opponent, collision_grid)
-        player_candy_bonus = -min(40, distance_player_candy)
-        opponent_candy_bonus = -min(40, distance_opponent_candy)
-
-        return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)
-        # return length_difference
-
     def children(self):
         for move in MOVE_VALUE_TO_DIRECTION.values():
             player = deepcopy(self.player)
@@ -118,6 +101,27 @@ class Node:
                 yield TerminalNode(self.opponent, player)
                 continue
             yield Node(self.grid_size, self.opponent, player, self.candies)
+
+    def heuristic_value(self):
+        length_difference = len(self.player) - len(self.opponent)
+        candy_bonus = self.candy_bonus()
+
+        return length_difference + 0.01 * candy_bonus
+        # return length_difference
+
+    def candy_bonus(self):
+        collision_grid = np.zeros(self.grid_size, dtype=bool)
+        for segment in self.player:
+            collision_grid[segment[0], segment[1]] = True
+        for segment in self.opponent:
+            collision_grid[segment[0], segment[1]] = True
+
+        distance_player_candy = self._distance_to_candy(self.player, collision_grid)
+        distance_opponent_candy = self._distance_to_candy(self.opponent, collision_grid)
+        player_candy_bonus = -min(40, distance_player_candy)
+        opponent_candy_bonus = -min(40, distance_opponent_candy)
+
+        return player_candy_bonus - opponent_candy_bonus
 
     def _distance_to_candy(self, snake, grid: np.array):
         if not self.candies:
