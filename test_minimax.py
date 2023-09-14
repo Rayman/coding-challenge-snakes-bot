@@ -86,8 +86,8 @@ def test_suicide():
     """
     It's player 0 turn. If you suicide you win
     |0 0 0 0 0 |
-    |          |     
-    |1 1       | 
+    |          |
+    |1 1       |
     """
     player = Snake(id=0, positions=np.array([
         [4, 2],
@@ -107,3 +107,30 @@ def test_suicide():
 
     assert moves[Move.LEFT] == 99
     assert moves[Move.LEFT] > moves[Move.DOWN]
+
+
+def test_dont_suicide():
+    grid_size = (5, 3)
+    """
+    It's player 0 turn. If you suicide you win
+    |0 0 0 0   |
+    |          |
+    |1 1       |
+    """
+    player = Snake(id=0, positions=np.array([
+        [3, 2],
+        [2, 2],
+        [1, 2],
+        [0, 2],
+    ]))
+    opponent = Snake(id=1, positions=np.array([
+        [1, 0],
+        [0, 0],
+    ]))
+    candies = []
+
+    moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
+    print(moves)
+
+    assert moves[Move.LEFT] == -50
+    assert moves[Move.DOWN] > moves[Move.LEFT]
