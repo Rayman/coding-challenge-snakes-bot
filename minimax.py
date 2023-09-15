@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 
-from .shortest_path import shortest_path
+from .shortest_path import dijkstra
 from ...bot import Bot
 from ...constants import MOVE_VALUE_TO_DIRECTION, Move
 from ...snake import Snake
@@ -127,13 +127,8 @@ class Node:
         if not self.candies:
             return 0
 
-        shortest = np.inf
-        for candy in self.candies:
-            length = shortest_path(snake[0], candy, grid)
-            if length is not None and length < shortest:
-                shortest = length
-
-        return shortest
+        dist = dijkstra(snake[0], grid)
+        return min(dist[candy[0], candy[1]] for candy in self.candies)
 
     def __str__(self):
         grid = np.empty(self.grid_size, dtype=str)
