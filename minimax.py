@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 
-from .shortest_path import dijkstra
+from .shortest_path import dijkstra, neighbors
 from ...bot import Bot
 from ...constants import MOVE_VALUE_TO_DIRECTION, Move
 from ...snake import Snake
@@ -103,31 +103,50 @@ class Node:
             yield Node(self.grid_size, self.opponent, player, self.candies)
 
     def heuristic_value(self):
-        length_difference = len(self.player) - len(self.opponent)
-        candy_bonus = self.candy_bonus()
-
-        return length_difference + 0.01 * candy_bonus
-        # return length_difference
-
-    def candy_bonus(self):
         collision_grid = np.zeros(self.grid_size, dtype=bool)
         for segment in self.player:
             collision_grid[segment[0], segment[1]] = True
         for segment in self.opponent:
             collision_grid[segment[0], segment[1]] = True
 
-        distance_player_candy = self._distance_to_candy(self.player, collision_grid)
-        distance_opponent_candy = self._distance_to_candy(self.opponent, collision_grid)
+        player_dist = dijkstra(self.player[0], collision_grid)
+        # print('player:\n', np.flipud(player_dist.T))
+
+        opponent_dist = dijkstra(self.opponent[0], collision_grid)
+        # print('opponent:\n', np.flipud(opponent_dist.T))
+
+        length_difference = len(self.player) - len(self.opponent)
+        candy_bonus = self.candy_bonus(player_dist, opponent_dist)
+        # tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
+
+        return length_difference + 0.01 * candy_bonus
+        # return length_difference
+
+    def candy_bonus(self, player_dist, opponent_dist):
+        distance_player_candy = self._distance_to_candy(player_dist)
+        distance_opponent_candy = self._distance_to_candy(opponent_dist)
         player_candy_bonus = -min(40, distance_player_candy)
         opponent_candy_bonus = -min(40, distance_opponent_candy)
 
         return player_candy_bonus - opponent_candy_bonus
 
-    def _distance_to_candy(self, snake, grid: np.array):
+    def tail_penalty(self, collision_grid, player_dist, opponent_dist):
+        max_int = np.iinfo(player_dist.dtype).max
+        player_tail_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.player[-1], collision_grid)),
+                               default=max_int)
+        opponent_tail_dist = min((opponent_dist[n[0], n[1]] for n in neighbors(self.opponent[-1], collision_grid)),
+                                 default=max_int)
+
+        player_tail_penalty = 30 if player_tail_dist == max_int else 0
+        opponent_tail_penalty = 30 if opponent_tail_dist == max_int else 0
+
+        # print(f'tail penalty: player={player_tail_penalty} opponent={opponent_tail_penalty}')
+        return player_tail_penalty - opponent_tail_penalty
+
+    def _distance_to_candy(self, dist: np.array):
         if not self.candies:
             return 0
 
-        dist = dijkstra(snake[0], grid)
         return min(dist[candy[0], candy[1]] for candy in self.candies)
 
     def __str__(self):

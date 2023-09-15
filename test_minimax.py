@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from .minimax import moves_with_scores
 from ...constants import Move
@@ -16,7 +17,7 @@ class TestCorner:
     It's player 0 turn. If you move into corner, you will die
     |0    |
     |0    |
-    |* 1 1|  
+    |* 1 1|
     """
     player = Snake(id=0, positions=np.array([
         [0, 1],
@@ -57,6 +58,37 @@ class TestCorner:
         assert moves[Move.DOWN] == -99
         assert Move.LEFT not in moves
         assert moves[Move.RIGHT] == -1
+
+
+@pytest.mark.skip
+def test_minimax_avoid_dead_ends():
+    grid_size = (3, 6)
+    """
+    Player 0 shouldn't move to the top, because it can't reach its tail
+    |     |
+    |0 0 0|
+    |0    |
+    |0    |
+    |     |
+    |1 1 1|
+    """
+    player = Snake(id=0, positions=np.array([
+        [2, 4],
+        [1, 4],
+        [0, 4],
+        [0, 3],
+        [0, 2],
+    ]))
+    opponent = Snake(id=1, positions=np.array([
+        [0, 0],
+        [1, 0],
+        [2, 0],
+    ]))
+    candies = []
+    moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
+    # round_values(moves)
+    print(moves)
+    assert moves[Move.DOWN] > moves[Move.UP] > moves[Move.LEFT]
 
 
 def test_minimax_candies():
