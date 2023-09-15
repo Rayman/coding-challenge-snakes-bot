@@ -135,6 +135,24 @@ def test_minimax_candy_on_body():
     assert moves[Move.DOWN] == moves[Move.RIGHT] > moves[Move.LEFT]
 
 
+@pytest.mark.skip
+def test_bot_prefers_to_be_close():
+    grid_size = (3, 4)
+    """
+    Snake 0 is very long, it should go towards the opponent
+    |0 0  |
+    |     |
+    |     |
+    |1 1  |
+    """
+    player = Snake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (20, 1)))))
+    opponent = Snake(id=1, positions=np.vstack(([1, 0], np.tile([0, 0], (20, 1)))))
+    candies = []
+    moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
+    print(moves)
+    assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT]
+
+
 def test_suicide():
     grid_size = (5, 3)
     """

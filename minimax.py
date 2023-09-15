@@ -16,7 +16,7 @@ def moves_with_scores(grid_size, player, opponent, candies, depth):
         move = move_to_enum(child.opponent[0] - player[0])
         # print(f'evaluating move={move}')
         value = -negamax(child, depth)
-        # print(f'evaluation result for move={move} value={value}')
+        # print(f'evaluation result for move={move} value={value}\n')
         yield move, value
 
 
@@ -116,19 +116,25 @@ class Node:
         # print('opponent:\n', np.flipud(opponent_dist.T))
 
         length_difference = len(self.player) - len(self.opponent)
-        candy_bonus = self.candy_bonus(player_dist, opponent_dist)
+
+        max_int = np.iinfo(player_dist.dtype).max
+        player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.opponent[0], collision_grid)),
+                                   default=max_int)
+        player_opponent_dist = min(*self.grid_size, player_opponent_dist)
+
+        player_candy_bonus = self.candy_bonus(player_dist)  # if len(self.player) < 10 else 0
+        opponent_candy_bonus = self.candy_bonus(opponent_dist)  # if len(self.opponent) < 10 else 0
+
         # tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
 
-        return length_difference + 0.01 * candy_bonus
+        # print(f'player_opponent_dist={player_opponent_dist}')
+        # print(f'length_difference={length_difference} player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
+        return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)  # + 0.001 * player_opponent_dist
         # return length_difference
 
-    def candy_bonus(self, player_dist, opponent_dist):
-        distance_player_candy = self._distance_to_candy(player_dist)
-        distance_opponent_candy = self._distance_to_candy(opponent_dist)
-        player_candy_bonus = -min(40, distance_player_candy)
-        opponent_candy_bonus = -min(40, distance_opponent_candy)
-
-        return player_candy_bonus - opponent_candy_bonus
+    def candy_bonus(self, dist):
+        distance_to_candy = self._distance_to_candy(dist)
+        return -min(40, distance_to_candy)
 
     def tail_penalty(self, collision_grid, player_dist, opponent_dist):
         max_int = np.iinfo(player_dist.dtype).max
