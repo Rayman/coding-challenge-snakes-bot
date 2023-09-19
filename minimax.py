@@ -1,6 +1,6 @@
 from copy import deepcopy
 from random import choice
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -188,11 +188,23 @@ class BattleModeNode(Node):
         for segment in self.opponent:
             collision_grid[segment[0], segment[1]] = True
 
+        # It's players turn, so if player doesn't have any legal moves left, the opponent has won
+        number_of_moves = len(list(neighbors(self.player[0], collision_grid)))
+        if number_of_moves == 0:
+            # print(f'Player {self.player.id} has no legal moves available, opponent={self.opponent.id} will survive')
+            return -TerminalNode(self.opponent, self.player).heuristic_value()
+        # We can't yet check how many legal moves the opponent has available, because player still needs to move
+
         player_dist = dijkstra(self.player[0], collision_grid)
         # print('player:\n', np.flipud(player_dist.T))
 
         opponent_dist = dijkstra(self.opponent[0], collision_grid)
         # print('opponent:\n', np.flipud(opponent_dist.T))
+
+        # print(np.flipud((player_dist > opponent_dist).T))
+        # print(np.flipud((opponent_dist > player_dist).T))
+        voronoy_heuristic = np.count_nonzero(player_dist < opponent_dist) - np.count_nonzero(
+            opponent_dist < player_dist)
 
         max_int = np.iinfo(player_dist.dtype).max
         player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.opponent[0], collision_grid)),
@@ -202,8 +214,8 @@ class BattleModeNode(Node):
         tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
         tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
 
-        print(f'battle mode!!! player_opponent_dist={player_opponent_dist} tail_penalty={tail_penalty}')
-        return player_opponent_dist + tail_penalty
+        # print(f'voronoy_heuristic={voronoy_heuristic} tail_penalty={tail_penalty}')
+        return voronoy_heuristic / self.grid_size[0] / self.grid_size[1]  # + tail_penalty
 
 
 def is_on_grid(pos, grid_size):
@@ -234,9 +246,9 @@ def move_to_enum(move: np.array) -> Move:
 
 
 class MiniMax(Bot):
-    """
-    Pick a random move, given that it is collision free
-    """
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        self.grid_size = grid_size
+        self.battle_mode = False
 
     @property
     def name(self):
@@ -253,11 +265,13 @@ class MiniMax(Bot):
         max_score = float('-inf')
         moves = []
 
-        node_class = EatingModeNode
-        # if len(player) > len(opponent) > 10:
-        #     node_class = BattleModeNode
-        # else:
-        #     node_class = EatingModeNode
+        if len(player) > len(opponent) > 10:
+            self.battle_mode = True
+
+        if self.battle_mode:
+            node_class = BattleModeNode
+        else:
+            node_class = EatingModeNode
 
         for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 0, node_class):
             if score > max_score:

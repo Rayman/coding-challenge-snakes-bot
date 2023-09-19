@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from .minimax import moves_with_scores
+from .minimax import moves_with_scores, EatingModeNode, BattleModeNode
 from ...constants import Move
 from ...snake import Snake
 
@@ -109,23 +109,26 @@ class TestFastWin:
     ]))
     candies = []
 
-    def test_depth_0(self):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 0))
+    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
+    def test_depth_0(self, node_class):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 0, node_class))
         # round_values(moves)
         print()
         print(moves)
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    def test_depth_1(self):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1))
+    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
+    def test_depth_1(self, node_class):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1, node_class))
         # round_values(moves)
         print()
         print(moves)
         # At depth 1 the bot should see a win in 1 move
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    def test_depth_2(self):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2))
+    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
+    def test_depth_2(self, node_class):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2, node_class))
         # round_values(moves)
         print()
         print(moves)
