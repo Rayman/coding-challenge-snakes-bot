@@ -39,7 +39,7 @@ def negamax(node, depth):
 
 class TerminalNode:
     """
-    Game state where the current player can't move anymore because the opponent died
+    Game state where the opponent has just died
     """
 
     def __init__(self, player, opponent):
@@ -49,6 +49,7 @@ class TerminalNode:
     def heuristic_value(self):
         player_score = len(self.player) * 2
         opponent_score = len(self.opponent)
+        # print(f'player {self.player.id} survives player_score={player_score} opponent_score={opponent_score}')
         if player_score > opponent_score:
             return 99
         elif player_score < opponent_score:
@@ -145,6 +146,13 @@ class EatingModeNode(Node):
             collision_grid[segment[0], segment[1]] = True
         for segment in self.opponent:
             collision_grid[segment[0], segment[1]] = True
+
+        # It's players turn, so if player doesn't have any legal moves left, the opponent has won
+        number_of_moves = len(list(neighbors(self.player[0], collision_grid)))
+        if number_of_moves == 0:
+            # print(f'Player {self.player.id} has no legal moves available, opponent={self.opponent.id} will survive')
+            return -TerminalNode(self.opponent, self.player).heuristic_value()
+        # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
         player_dist = dijkstra(self.player[0], collision_grid)
         # print('player:\n', np.flipud(player_dist.T))

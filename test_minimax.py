@@ -40,17 +40,16 @@ class TestCorner:
         assert moves[Move.RIGHT] == 0
 
     def test_depth_1(self):
-        # at depth 1 moving to the corner result in the other player growing
+        # At depth 1, moving to the corner will trap player 1
         moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1))
         round_values(moves)
         print(moves)
         assert moves[Move.UP] == -99
-        assert moves[Move.DOWN] == 1
+        assert moves[Move.DOWN] == -99
         assert Move.LEFT not in moves
         assert moves[Move.RIGHT] == -1
 
     def test_depth_2(self):
-        # at depth 2 moving to the corner results in death
         moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2))
         round_values(moves)
         print(moves)
@@ -89,6 +88,48 @@ def test_minimax_avoid_dead_ends():
     # round_values(moves)
     print(moves)
     assert moves[Move.DOWN] > moves[Move.UP] > moves[Move.LEFT]
+
+
+class TestFastWin:
+    grid_size = (3, 3)
+    """
+    Player 0 should move down because it guarantees a win faster
+    |0 0  |
+    |1 0  |
+    |1    |
+    """
+    player = Snake(id=0, positions=np.array([
+        [1, 1],
+        [1, 2],
+        [0, 2],
+    ]))
+    opponent = Snake(id=1, positions=np.array([
+        [0, 0],
+        [0, 1],
+    ]))
+    candies = []
+
+    def test_depth_0(self):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 0))
+        # round_values(moves)
+        print()
+        print(moves)
+        assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
+
+    def test_depth_1(self):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1))
+        # round_values(moves)
+        print()
+        print(moves)
+        # At depth 1 the bot should see a win in 1 move
+        assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
+
+    def test_depth_2(self):
+        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2))
+        # round_values(moves)
+        print()
+        print(moves)
+        assert moves[Move.DOWN] == moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
 
 def test_minimax_candies():
