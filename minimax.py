@@ -9,6 +9,8 @@ from ...bot import Bot
 from ...constants import MOVE_VALUE_TO_DIRECTION, Move
 from ...snake import Snake
 
+__all__ = ['MiniMax']
+
 
 def moves_with_scores(grid_size, player, opponent, candies, depth, node_class=None):
     node_class = EatingModeNode if node_class is None else node_class
