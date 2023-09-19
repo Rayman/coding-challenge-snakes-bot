@@ -10,8 +10,9 @@ from ...constants import MOVE_VALUE_TO_DIRECTION, Move
 from ...snake import Snake
 
 
-def moves_with_scores(grid_size, player, opponent, candies, depth):
-    node = Node(grid_size, player, opponent, candies)
+def moves_with_scores(grid_size, player, opponent, candies, depth, node_class=None):
+    node_class = EatingModeNode if node_class is None else node_class
+    node = node_class(grid_size, player, opponent, candies)
     for child in node.children():
         move = move_to_enum(child.opponent[0] - player[0])
         # print(f'evaluating move={move}')
@@ -100,8 +101,44 @@ class Node:
                 # print(f'snake {player.id} collided with the opponent')
                 yield TerminalNode(self.opponent, player)
                 continue
-            yield Node(self.grid_size, self.opponent, player, self.candies)
+            yield self.__class__(self.grid_size, self.opponent, player, self.candies)
 
+    def tail_penalty(self, collision_grid, player_dist, opponent_dist):
+        """
+
+        :param collision_grid:
+        :param player_dist:
+        :param opponent_dist:
+        :return:
+        """
+        max_int = np.iinfo(player_dist.dtype).max
+        player_tail_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.player[-1], collision_grid)),
+                               default=max_int)
+        opponent_tail_dist = min((opponent_dist[n[0], n[1]] for n in neighbors(self.opponent[-1], collision_grid)),
+                                 default=max_int)
+
+        player_tail_penalty = 30 if player_tail_dist == max_int else 0
+        opponent_tail_penalty = 30 if opponent_tail_dist == max_int else 0
+
+        # print(f'tail penalty: player={player_tail_penalty} opponent={opponent_tail_penalty}')
+        return player_tail_penalty - opponent_tail_penalty
+
+    def __str__(self):
+        grid = np.empty(self.grid_size, dtype=str)
+        for x in range(self.grid_size[0]):
+            for y in range(self.grid_size[1]):
+                grid[x, y] = ' '
+        for candy in self.candies:
+            grid[candy[0], candy[1]] = '*'
+        # if the player died, don't print it
+        for pos in self.player:
+            grid[pos[0], pos[1]] = 'P'
+        for pos in self.opponent:
+            grid[pos[0], pos[1]] = 'O'
+        return str(np.flipud(grid.T))
+
+
+class EatingModeNode(Node):
     def heuristic_value(self):
         collision_grid = np.zeros(self.grid_size, dtype=bool)
         for segment in self.player:
@@ -117,37 +154,16 @@ class Node:
 
         length_difference = len(self.player) - len(self.opponent)
 
-        max_int = np.iinfo(player_dist.dtype).max
-        player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.opponent[0], collision_grid)),
-                                   default=max_int)
-        player_opponent_dist = min(*self.grid_size, player_opponent_dist)
-
         player_candy_bonus = self.candy_bonus(player_dist)  # if len(self.player) < 10 else 0
         opponent_candy_bonus = self.candy_bonus(opponent_dist)  # if len(self.opponent) < 10 else 0
 
-        # tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
-
         # print(f'player_opponent_dist={player_opponent_dist}')
         # print(f'length_difference={length_difference} player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
-        return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)  # + 0.001 * player_opponent_dist
-        # return length_difference
+        return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)
 
     def candy_bonus(self, dist):
         distance_to_candy = self._distance_to_candy(dist)
         return -min(40, distance_to_candy)
-
-    def tail_penalty(self, collision_grid, player_dist, opponent_dist):
-        max_int = np.iinfo(player_dist.dtype).max
-        player_tail_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.player[-1], collision_grid)),
-                               default=max_int)
-        opponent_tail_dist = min((opponent_dist[n[0], n[1]] for n in neighbors(self.opponent[-1], collision_grid)),
-                                 default=max_int)
-
-        player_tail_penalty = 30 if player_tail_dist == max_int else 0
-        opponent_tail_penalty = 30 if opponent_tail_dist == max_int else 0
-
-        # print(f'tail penalty: player={player_tail_penalty} opponent={opponent_tail_penalty}')
-        return player_tail_penalty - opponent_tail_penalty
 
     def _distance_to_candy(self, dist: np.array):
         if not self.candies:
@@ -155,19 +171,31 @@ class Node:
 
         return min(dist[candy[0], candy[1]] for candy in self.candies)
 
-    def __str__(self):
-        grid = np.empty(self.grid_size, dtype=str)
-        for x in range(self.grid_size[0]):
-            for y in range(self.grid_size[1]):
-                grid[x, y] = ' '
-        for candy in self.candies:
-            grid[candy[0], candy[1]] = '*'
-        # if the player died, don't print it
-        for pos in self.player:
-            grid[pos[0], pos[1]] = 'P'
-        for pos in self.opponent:
-            grid[pos[0], pos[1]] = 'O'
-        return str(np.flipud(grid.T))
+
+class BattleModeNode(Node):
+    def heuristic_value(self):
+        collision_grid = np.zeros(self.grid_size, dtype=bool)
+        for segment in self.player:
+            collision_grid[segment[0], segment[1]] = True
+        for segment in self.opponent:
+            collision_grid[segment[0], segment[1]] = True
+
+        player_dist = dijkstra(self.player[0], collision_grid)
+        # print('player:\n', np.flipud(player_dist.T))
+
+        opponent_dist = dijkstra(self.opponent[0], collision_grid)
+        # print('opponent:\n', np.flipud(opponent_dist.T))
+
+        max_int = np.iinfo(player_dist.dtype).max
+        player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(self.opponent[0], collision_grid)),
+                                   default=max_int)
+        player_opponent_dist = min(*self.grid_size, player_opponent_dist)
+
+        tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
+        tail_penalty = self.tail_penalty(collision_grid, player_dist, opponent_dist)
+
+        print(f'battle mode!!! player_opponent_dist={player_opponent_dist} tail_penalty={tail_penalty}')
+        return player_opponent_dist + tail_penalty
 
 
 def is_on_grid(pos, grid_size):
@@ -216,7 +244,14 @@ class MiniMax(Bot):
 
         max_score = float('-inf')
         moves = []
-        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 0):
+
+        node_class = EatingModeNode
+        # if len(player) > len(opponent) > 10:
+        #     node_class = BattleModeNode
+        # else:
+        #     node_class = EatingModeNode
+
+        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 0, node_class):
             if score > max_score:
                 max_score = score
                 moves = [move]
