@@ -23,17 +23,6 @@ def moves_with_scores(grid_size, player, opponent, candies, depth, evaluation_fu
         yield move, value
 
 
-def is_on_grid(pos, grid_size):
-    return 0 <= pos[0] < grid_size[0] and 0 <= pos[1] < grid_size[1]
-
-
-def collides(head, snake):
-    for segment in snake:
-        if np.array_equal(head, segment):
-            return True
-    return False
-
-
 def move_to_enum(move: np.array) -> Move:
     if move[0] == 0:
         if move[1] == 1:
