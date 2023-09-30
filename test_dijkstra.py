@@ -1,6 +1,6 @@
 import numpy as np
 
-from .shortest_path import dijkstra
+from .dijkstra import dijkstra
 
 
 def test_dijkstra():

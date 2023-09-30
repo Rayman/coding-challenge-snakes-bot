@@ -4,7 +4,8 @@ import numpy as np
 
 from .board import Node
 from .board import TerminalNode
-from .shortest_path import dijkstra, neighbors
+from .test_dijkstra import dijkstra
+from .utils import neighbors
 
 
 def prefer_eating(node: Node):
