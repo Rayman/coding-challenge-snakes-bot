@@ -1,10 +1,10 @@
 import numpy as np
 
-from .dijkstra import dijkstra
+from .dijkstra import dijkstra, print_array
 
 
 def test_dijkstra():
-    start = np.array([0, 3])
+    start = (0, 3)
     grid = np.flipud(np.array([
         [0, 0, 1, 0],
         [0, 1, 0, 0],
@@ -12,4 +12,20 @@ def test_dijkstra():
         [0, 0, 0, 0],
     ], dtype=bool)).T
     dist = dijkstra(start, grid)
+    print_array(dist)
+    # assert dist[3 * grid.shape[1] + 3] == 7
+    assert dist[3, 3] == 7
+
+
+def test_benchmark_dijkstra(benchmark):
+    start = (0, 3)
+    grid = np.flipud(np.array([
+        [0, 0, 1, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ], dtype=bool)).T
+    dist = benchmark(dijkstra, start, grid)
+    print_array(dist)
+    # assert dist[3 * grid.shape[1] + 3] == 7
     assert dist[3, 3] == 7
