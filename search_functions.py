@@ -12,7 +12,7 @@ def negamax(node, depth, evaluation_function: Callable):
         return terminal_value(node)
     elif depth == 0:
         value = evaluation_function(node)
-        # print(f'terminal node with value={value}\n{node}')
+        # print(f'heuristic value={value}\n{node}')
     else:
         values = []
         for child in node.children():

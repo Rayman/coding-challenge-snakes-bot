@@ -16,21 +16,22 @@ def vector_add(a: Tuple, b: Tuple):
     # return tuple(map(add, a, b))
 
 
-def neighbors(position: Tuple, grid):
-    assert isinstance(position, Tuple) or position.shape == (2,)
-    if position[0] > 0:
-        pos = vector_add(position, LEFT)
+def neighbors(i: int, j: int, grid):
+    # assert isinstance(i, int), type(i)
+    # assert isinstance(j, int), type(j)
+    if i > 0:
+        pos = vector_add((i, j), LEFT)
         if not grid[pos[0], pos[1]]:
             yield pos
-    if position[1] > 0:
-        pos = vector_add(position, DOWN)
+    if j > 0:
+        pos = vector_add((i, j), DOWN)
         if not grid[pos[0], pos[1]]:
             yield pos
-    if position[0] < grid.shape[0] - 1:
-        pos = vector_add(position, RIGHT)
+    if i < grid.shape[0] - 1:
+        pos = vector_add((i, j), RIGHT)
         if not grid[pos[0], pos[1]]:
             yield pos
-    if position[1] < grid.shape[1] - 1:
-        pos = vector_add(position, UP)
+    if j < grid.shape[1] - 1:
+        pos = vector_add((i, j), UP)
         if not grid[pos[0], pos[1]]:
             yield pos

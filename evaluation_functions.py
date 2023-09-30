@@ -16,7 +16,7 @@ def prefer_eating(node: Node):
         collision_grid[segment[0], segment[1]] = True
 
     # It's players turn, so if player doesn't have any legal moves left, the opponent has won
-    number_of_moves = len(list(neighbors(node.player[0], collision_grid)))
+    number_of_moves = len(list(neighbors(*node.player[0], collision_grid)))
     if number_of_moves == 0:
         # print(f'Player {node.player.id} has no legal moves available, opponent={node.opponent.id} will survive')
         return -terminal_value(TerminalNode(node.opponent, node.player))
@@ -46,7 +46,7 @@ def prefer_battle(node: Node):
         collision_grid[segment[0], segment[1]] = True
 
     # It's players turn, so if player doesn't have any legal moves left, the opponent has won
-    number_of_moves = len(list(neighbors(node.player[0], collision_grid)))
+    number_of_moves = len(list(neighbors(*node.player[0], collision_grid)))
     if number_of_moves == 0:
         # print(f'Player {node.player.id} has no legal moves available, opponent={node.opponent.id} will survive')
         return -terminal_value(TerminalNode(node.opponent, node.player))
@@ -64,7 +64,7 @@ def prefer_battle(node: Node):
         opponent_dist < player_dist)
 
     max_int = np.iinfo(player_dist.dtype).max
-    player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(node.opponent[0], collision_grid)),
+    player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
                                default=max_int)
     player_opponent_dist = min(*node.grid_size, player_opponent_dist)
 
@@ -98,9 +98,9 @@ def tail_penalty(node: Node, collision_grid, player_dist, opponent_dist):
     :return:
     """
     max_int = np.iinfo(player_dist.dtype).max
-    player_tail_dist = min((player_dist[n[0], n[1]] for n in neighbors(node.player[-1], collision_grid)),
+    player_tail_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.player[-1], collision_grid)),
                            default=max_int)
-    opponent_tail_dist = min((opponent_dist[n[0], n[1]] for n in neighbors(node.opponent[-1], collision_grid)),
+    opponent_tail_dist = min((opponent_dist[n[0], n[1]] for n in neighbors(*node.opponent[-1], collision_grid)),
                              default=max_int)
 
     player_tail_penalty = 30 if player_tail_dist == max_int else 0

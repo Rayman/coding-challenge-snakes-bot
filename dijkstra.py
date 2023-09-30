@@ -21,7 +21,7 @@ def dijkstra(start, grid):
         new_dist = dist[current[0] * grid.shape[1] + current[1]] + 1
         # print(f'inspecting {current} new_dist={new_dist}')
 
-        for neighbor in neighbors(current, grid):
+        for neighbor in neighbors(*current, grid):
             i = neighbor[0] * grid.shape[1] + neighbor[1]
             if new_dist < dist[i]:
                 dist[i] = new_dist
