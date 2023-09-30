@@ -2,8 +2,7 @@ from heapq import heappush, heappop
 
 import numpy as np
 
-from .utils import is_on_grid
-from ...constants import RIGHT, UP, LEFT, DOWN
+from .utils import is_on_grid, neighbors
 
 
 def shortest_path(start, goal, grid):
@@ -38,14 +37,13 @@ def shortest_path(start, goal, grid):
             return g_scores[goal[0], goal[1]]
 
         tentative_g_score = g_scores[current.position[0], current.position[1]] + 1
-        for neighbor in current.neighbors():
-            if tentative_g_score < g_scores[neighbor.position[0], neighbor.position[1]]:
+        for position in neighbors(current.position, grid):
+            if tentative_g_score < g_scores[position[0], position[1]]:
                 # This path to neighbor is better than any previous one. Record it!
-                g_scores[neighbor.position[0], neighbor.position[1]] = tentative_g_score
-                f_scores[neighbor.position[0], neighbor.position[1]] = tentative_g_score + np.linalg.norm(
-                    neighbor.position - goal)
+                g_scores[position[0], position[1]] = tentative_g_score
+                f_scores[position[0], position[1]] = tentative_g_score + np.linalg.norm(position - goal)
                 # print(f'pushing node tentative_gScore={tentative_gScore} fScore={fScores[current.position[0], current.position[1]]} gScore={gScores[current.position[0], current.position[1]]}')
-                open_set.push(neighbor)
+                open_set.push(AStarNode(position, grid, f_scores))
 
     return None
 
@@ -55,21 +53,6 @@ class AStarNode:
         self.position = position
         self.fScores = fScores
         self.grid = grid
-
-    def neighbors(self):
-        if self.position[0] > 0:
-            yield from self._possible_neighbor(self.position + LEFT)
-        if self.position[1] > 0:
-            yield from self._possible_neighbor(self.position + DOWN)
-        if self.position[0] < self.grid.shape[0] - 1:
-            yield from self._possible_neighbor(self.position + RIGHT)
-        if self.position[1] < self.grid.shape[1] - 1:
-            yield from self._possible_neighbor(self.position + UP)
-
-    def _possible_neighbor(self, pos):
-        # print(f'collision: {self.grid[pos[0], pos[1]]}')
-        if not self.grid[pos[0], pos[1]]:
-            yield AStarNode(pos, self.grid, self.fScores)
 
     @property
     def fScore(self):
