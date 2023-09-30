@@ -19,17 +19,18 @@ def vector_add(a: Tuple, b: Tuple):
 def neighbors(position: Tuple, grid):
     assert isinstance(position, Tuple) or position.shape == (2,)
     if position[0] > 0:
-        yield from _possible_neighbor(vector_add(position, LEFT), grid)
+        pos = vector_add(position, LEFT)
+        if not grid[pos[0], pos[1]]:
+            yield pos
     if position[1] > 0:
-        yield from _possible_neighbor(vector_add(position, DOWN), grid)
+        pos = vector_add(position, DOWN)
+        if not grid[pos[0], pos[1]]:
+            yield pos
     if position[0] < grid.shape[0] - 1:
-        yield from _possible_neighbor(vector_add(position, RIGHT), grid)
+        pos = vector_add(position, RIGHT)
+        if not grid[pos[0], pos[1]]:
+            yield pos
     if position[1] < grid.shape[1] - 1:
-        yield from _possible_neighbor(vector_add(position, UP), grid)
-
-
-def _possible_neighbor(pos, grid):
-    assert isinstance(pos, Tuple)
-    # print(f'collision: {grid[pos[0], pos[1]]}')
-    if not grid[pos[0], pos[1]]:
-        yield pos
+        pos = vector_add(position, UP)
+        if not grid[pos[0], pos[1]]:
+            yield pos
