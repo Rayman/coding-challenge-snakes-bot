@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from .minimax import moves_with_scores, EatingModeNode, BattleModeNode
+from .evaluation_functions import prefer_eating, prefer_battle
+from .minimax import moves_with_scores
 from ...constants import Move
 from ...snake import Snake
 
@@ -109,26 +110,29 @@ class TestFastWin:
     ]))
     candies = []
 
-    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
-    def test_depth_0(self, node_class):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 0, node_class))
+    @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
+    def test_depth_0(self, evaluation_function):
+        moves = dict(
+            moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 0, evaluation_function))
         # round_values(moves)
         print()
         print(moves)
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
-    def test_depth_1(self, node_class):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1, node_class))
+    @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
+    def test_depth_1(self, evaluation_function):
+        moves = dict(
+            moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 1, evaluation_function))
         # round_values(moves)
         print()
         print(moves)
         # At depth 1 the bot should see a win in 1 move
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    @pytest.mark.parametrize('node_class', [EatingModeNode, BattleModeNode])
-    def test_depth_2(self, node_class):
-        moves = dict(moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2, node_class))
+    @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
+    def test_depth_2(self, evaluation_function):
+        moves = dict(
+            moves_with_scores(self.grid_size, self.player, self.opponent, self.candies, 2, evaluation_function))
         # round_values(moves)
         print()
         print(moves)
