@@ -37,7 +37,7 @@ def shortest_path(start, goal, grid):
             return g_scores[goal[0], goal[1]]
 
         tentative_g_score = g_scores[current.position[0], current.position[1]] + 1
-        for position in neighbors(current.position, grid):
+        for position in neighbors(*current.position, grid):
             if tentative_g_score < g_scores[position[0], position[1]]:
                 # This path to neighbor is better than any previous one. Record it!
                 g_scores[position[0], position[1]] = tentative_g_score
