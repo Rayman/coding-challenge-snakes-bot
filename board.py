@@ -3,8 +3,8 @@ from typing import List
 
 import numpy as np
 
+from .snake import FastSnake
 from ...constants import MOVE_VALUE_TO_DIRECTION
-from ...snake import Snake
 
 
 class Node:
@@ -12,7 +12,7 @@ class Node:
     Game state just before player makes a move
     """
 
-    def __init__(self, grid_size, player: Snake, opponent: Snake, candies: List[np.array]):
+    def __init__(self, grid_size, player: FastSnake, opponent: FastSnake, candies: List[np.array]):
         self.grid_size = grid_size
         self.player = player
         self.opponent = opponent

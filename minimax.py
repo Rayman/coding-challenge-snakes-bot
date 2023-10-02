@@ -6,6 +6,7 @@ import numpy as np
 from .board import Node
 from .evaluation_functions import prefer_eating, prefer_battle
 from .search_functions import negamax
+from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
 
@@ -16,11 +17,12 @@ def moves_with_scores(grid_size, player, opponent, candies, depth, evaluation_fu
     evaluation_function = prefer_eating if evaluation_function is None else evaluation_function
     node = Node(grid_size, player, opponent, candies)
     for child in node.children():
-        move = move_to_enum(child.opponent[0] - player[0])
+        move = child.opponent[0][0] - player[0][0], child.opponent[0][1] - player[0][1]
+        move_value = move_to_enum(move)
         # print(f'evaluating move={move}')
         value = -negamax(child, depth, evaluation_function)
         # print(f'evaluation result for move={move} value={value}\n')
-        yield move, value
+        yield move_value, value
 
 
 def move_to_enum(move: np.array) -> Move:
@@ -53,8 +55,8 @@ class MiniMax(Bot):
         return 'Rayman'
 
     def determine_next_move(self, snake, other_snakes, candies) -> Move:
-        player = snake
-        opponent = other_snakes[0]
+        player = FastSnake(id=snake.id, positions=snake.positions)
+        opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
 
         max_score = float('-inf')
         moves = []
