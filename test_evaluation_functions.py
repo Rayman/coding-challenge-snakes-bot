@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
+from .bot import moves_with_scores
 from .evaluation_functions import prefer_eating, prefer_battle
-from .minimax import moves_with_scores
-from ...constants import Move
 from .snake import FastSnake
+from ...constants import Move
 
 
 def round_values(moves):

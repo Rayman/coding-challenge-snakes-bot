@@ -10,7 +10,7 @@ from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
 
-__all__ = ['MiniMax']
+__all__ = ['Slifer']
 
 
 def moves_with_scores(grid_size, player, opponent, candies, depth, evaluation_function=None):
@@ -41,10 +41,11 @@ def move_to_enum(move: np.array) -> Move:
             return Move.LEFT
 
 
-class MiniMax(Bot):
-    def __init__(self, id: int, grid_size: Tuple[int, int]):
-        self.grid_size = grid_size
+class Slifer(Bot):
+    def __init__(self, id: int, grid_size: Tuple[int, int], depth=0):
+        super().__init__(id=id, grid_size=grid_size)
         self.battle_mode = False
+        self.depth = depth
 
     @property
     def name(self):
@@ -69,10 +70,38 @@ class MiniMax(Bot):
         else:
             evaluation_function = prefer_eating
 
-        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, 0, evaluation_function):
+        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, self.depth,
+                                             evaluation_function):
             if score > max_score:
                 max_score = score
                 moves = [move]
             elif score == max_score:
                 moves.append(move)
         return choice(moves)
+
+
+class Slifer0(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=0)
+
+    @property
+    def name(self):
+        return 'Slifer0'
+
+
+class Slifer1(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=1)
+
+    @property
+    def name(self):
+        return 'Slifer1'
+
+
+class Slifer2(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=2)
+
+    @property
+    def name(self):
+        return 'Slifer2'
