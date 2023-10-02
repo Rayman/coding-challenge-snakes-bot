@@ -34,13 +34,7 @@ class Node:
             else:
                 player.move(move)
 
-            self_collision = False
-            # self collision, don't check head
-            for p in self.player[1:]:
-                if np.array_equal(p, player[0]):
-                    self_collision = True
-                    break
-            if self_collision:
+            if player[0] in self.player[1:]:
                 # print(f'snake {player.id} collided with itself')
                 yield TerminalNode(self.opponent, player)
                 continue
