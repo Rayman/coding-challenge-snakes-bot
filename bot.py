@@ -1,8 +1,7 @@
-from random import choice
 from typing import Tuple
 
 from .evaluation_functions import prefer_eating, prefer_battle
-from .search_functions import negamax_moves
+from .search_functions import negamax_move
 from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
@@ -28,9 +27,6 @@ class Slifer(Bot):
         player = FastSnake(id=snake.id, positions=snake.positions)
         opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
 
-        max_score = float('-inf')
-        moves = []
-
         if len(player) > len(opponent) > 10:
             self.battle_mode = True
 
@@ -39,14 +35,7 @@ class Slifer(Bot):
         else:
             evaluation_function = prefer_eating
 
-        for move, score in negamax_moves(self.grid_size, player, opponent, candies, self.depth,
-                                         evaluation_function):
-            if score > max_score:
-                max_score = score
-                moves = [move]
-            elif score == max_score:
-                moves.append(move)
-        return choice(moves)
+        return negamax_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
 
 
 class Slifer0(Slifer):

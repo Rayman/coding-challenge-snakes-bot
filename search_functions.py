@@ -1,4 +1,5 @@
 from math import inf
+from random import shuffle, choice
 from typing import Callable
 
 import numpy as np
@@ -26,6 +27,19 @@ def negamax(node, depth, evaluation_function: Callable):
         value = max(values)
     # print(f'depth={depth} player={node.player.id} value={value:3}')
     return value
+
+
+def negamax_move(grid_size, player, opponent, candies, depth, evaluation_function=None):
+    best_value = -inf
+    best_moves = []
+    for move, value in negamax_moves(grid_size, player, opponent, candies, depth,
+                                     evaluation_function):
+        if value > best_value:
+            best_value = value
+            best_moves = [move]
+        elif value == best_value:
+            best_moves.append(move)
+    return choice(best_moves)
 
 
 def negamax_moves(grid_size, player, opponent, candies, depth, evaluation_function=None):
@@ -57,7 +71,7 @@ def negamax_ab(node, depth, a, b, evaluation_function: Callable):
             value = max(value, -negamax_ab(child, depth - 1, -b, -a, evaluation_function))
             a = max(a, value)
             if a >= b:
-                # print(f'ab cut-off at depth={depth} value={value} a={a} b={b}\n{node}')
+                print(f'ab cut-off at depth={depth} value={value} a={a} b={b}\n{node}')
                 break
     # print(f'depth={depth} player={node.player.id} value={value:3}')
     return value
@@ -66,15 +80,33 @@ def negamax_ab(node, depth, a, b, evaluation_function: Callable):
 def negamax_ab_moves(grid_size, player, opponent, candies, depth, evaluation_function=None):
     evaluation_function = prefer_eating if evaluation_function is None else evaluation_function
     node = Node(grid_size, player, opponent, candies)
-    a = -inf  # lower bound on
-    b = inf
+    # TODO: implement move ordering
     for child in node.children():
         move = move_to_enum((child.opponent[0][0] - player[0][0], child.opponent[0][1] - player[0][1]))
         # print(f'evaluating move={move}')
-        value = -negamax_ab(child, depth, -b, -a, evaluation_function)
-        a = max(a, value)
-        # print(f'evaluation result for move={move} value={value}\n')
+        value = -negamax_ab(child, depth, -inf, inf, evaluation_function)
+        # print(f'evaluation result for move={move} value={value} \n')
         yield move, value
+
+
+def negamax_ab_move(grid_size, player, opponent, candies, depth, evaluation_function=None):
+    evaluation_function = prefer_eating if evaluation_function is None else evaluation_function
+    node = Node(grid_size, player, opponent, candies)
+    best_move = None
+    best_value = -inf
+    a = -inf  # lower bound on
+    b = inf
+    # TODO: implement move ordering
+    for child in shuffle(node.children()):
+        move = move_to_enum((child.opponent[0][0] - player[0][0], child.opponent[0][1] - player[0][1]))
+        print(f'evaluating move={move}')
+        value = -negamax_ab(child, depth, -b, -a, evaluation_function)
+        print(f'evaluation result for move={move} value={value} \n')
+        a = max(a, value)
+        if value > best_value:
+            best_value = value
+            best_move = move
+    return best_move
 
 
 def move_to_enum(move: np.array) -> Move:

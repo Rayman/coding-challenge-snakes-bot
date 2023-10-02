@@ -113,7 +113,7 @@ class TestFastWin:
     ]))
     candies = []
 
-    @pytest.mark.parametrize('search_function', [negamax_moves])
+    @pytest.mark.parametrize('search_function', [negamax_moves, negamax_ab_moves])
     @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
     def test_depth_0(self, search_function, evaluation_function):
         moves = dict(search_function(self.grid_size, self.player, self.opponent, self.candies, 0, evaluation_function))
@@ -122,7 +122,7 @@ class TestFastWin:
         print(moves)
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    @pytest.mark.parametrize('search_function', [negamax_moves])
+    @pytest.mark.parametrize('search_function', [negamax_moves, negamax_ab_moves])
     @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
     def test_depth_1(self, search_function, evaluation_function):
         moves = dict(
@@ -133,7 +133,7 @@ class TestFastWin:
         # At depth 1 the bot should see a win in 1 move
         assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT] == moves[Move.UP]
 
-    @pytest.mark.parametrize('search_function', [negamax_moves])
+    @pytest.mark.parametrize('search_function', [negamax_moves, negamax_ab_moves])
     @pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
     def test_depth_2(self, search_function, evaluation_function):
         moves = dict(
