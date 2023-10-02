@@ -10,7 +10,7 @@ __all__ = ['Slifer']
 
 
 class Slifer(Bot):
-    def __init__(self, id: int, grid_size: Tuple[int, int], depth=0):
+    def __init__(self, id: int, grid_size: Tuple[int, int], depth=2):
         super().__init__(id=id, grid_size=grid_size)
         self.battle_mode = False
         self.depth = depth
@@ -36,6 +36,7 @@ class Slifer(Bot):
             evaluation_function = prefer_eating
 
         return negamax_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
+        # return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
 
 
 class Slifer0(Slifer):

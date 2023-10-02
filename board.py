@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List
+from typing import List, Generator
 
 import numpy as np
 
@@ -20,7 +20,7 @@ class Node:
         self.opponent = opponent
         self.candies = candies
 
-    def children(self):
+    def children(self) -> Generator:
         for move in MOVE_VALUE_TO_DIRECTION.values():
             player = deepcopy(self.player)
 
