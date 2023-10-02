@@ -1,44 +1,13 @@
 from random import choice
 from typing import Tuple
 
-import numpy as np
-
-from .board import Node
 from .evaluation_functions import prefer_eating, prefer_battle
-from .search_functions import negamax
+from .search_functions import negamax_moves
 from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
 
 __all__ = ['Slifer']
-
-
-def moves_with_scores(grid_size, player, opponent, candies, depth, evaluation_function=None):
-    evaluation_function = prefer_eating if evaluation_function is None else evaluation_function
-    node = Node(grid_size, player, opponent, candies)
-    for child in node.children():
-        move = child.opponent[0][0] - player[0][0], child.opponent[0][1] - player[0][1]
-        move_value = move_to_enum(move)
-        # print(f'evaluating move={move}')
-        value = -negamax(child, depth, evaluation_function)
-        # print(f'evaluation result for move={move} value={value}\n')
-        yield move_value, value
-
-
-def move_to_enum(move: np.array) -> Move:
-    if move[0] == 0:
-        if move[1] == 1:
-            return Move.UP
-        else:
-            assert move[1] == -1, f'Unexpected move={move}'
-            return Move.DOWN
-    else:
-        assert move[1] == 0, f'Unexpected move={move}'
-        if move[0] == 1:
-            return Move.RIGHT
-        else:
-            assert move[0] == -1, f'Unexpected move={move}'
-            return Move.LEFT
 
 
 class Slifer(Bot):
@@ -70,8 +39,8 @@ class Slifer(Bot):
         else:
             evaluation_function = prefer_eating
 
-        for move, score in moves_with_scores(self.grid_size, player, opponent, candies, self.depth,
-                                             evaluation_function):
+        for move, score in negamax_moves(self.grid_size, player, opponent, candies, self.depth,
+                                         evaluation_function):
             if score > max_score:
                 max_score = score
                 moves = [move]
