@@ -13,6 +13,8 @@ class Node:
     """
 
     def __init__(self, grid_size, player: FastSnake, opponent: FastSnake, candies: List[np.array]):
+        assert isinstance(player, FastSnake)
+        assert isinstance(opponent, FastSnake)
         self.grid_size = grid_size
         self.player = player
         self.opponent = opponent

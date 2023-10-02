@@ -4,7 +4,7 @@ import pytest
 from .evaluation_functions import prefer_eating, prefer_battle
 from .minimax import moves_with_scores
 from ...constants import Move
-from ...snake import Snake
+from .snake import FastSnake
 
 
 def round_values(moves):
@@ -20,11 +20,11 @@ class TestCorner:
     |0    |
     |* 1 1|
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [0, 1],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [1, 0],
         [2, 0],
     ]))
@@ -72,14 +72,14 @@ def test_minimax_avoid_dead_ends():
     |     |
     |1 1 1|
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [2, 4],
         [1, 4],
         [0, 4],
         [0, 3],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [0, 0],
         [1, 0],
         [2, 0],
@@ -99,12 +99,12 @@ class TestFastWin:
     |1 0  |
     |1    |
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [1, 1],
         [1, 2],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [0, 0],
         [0, 1],
     ]))
@@ -147,11 +147,11 @@ def test_minimax_candies():
     |             |
     |1 1          |
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [1, 2],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [1, 0],
         [0, 0],
     ]))
@@ -169,11 +169,11 @@ def test_minimax_candy_on_body():
     |     |
     |1 *  |
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [1, 2],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [1, 0],
         [0, 0],
     ]))
@@ -193,8 +193,8 @@ def test_bot_prefers_to_be_close():
     |     |
     |1 1  |
     """
-    player = Snake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (20, 1)))))
-    opponent = Snake(id=1, positions=np.vstack(([1, 0], np.tile([0, 0], (20, 1)))))
+    player = FastSnake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (20, 1)))))
+    opponent = FastSnake(id=1, positions=np.vstack(([1, 0], np.tile([0, 0], (20, 1)))))
     candies = []
     moves = dict(moves_with_scores(grid_size, player, opponent, candies, 0))
     print(moves)
@@ -209,14 +209,14 @@ def test_suicide():
     |          |
     |1 1       |
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [4, 2],
         [3, 2],
         [2, 2],
         [1, 2],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [1, 0],
         [0, 0],
     ]))
@@ -237,13 +237,13 @@ def test_dont_suicide():
     |          |
     |1 1       |
     """
-    player = Snake(id=0, positions=np.array([
+    player = FastSnake(id=0, positions=np.array([
         [3, 2],
         [2, 2],
         [1, 2],
         [0, 2],
     ]))
-    opponent = Snake(id=1, positions=np.array([
+    opponent = FastSnake(id=1, positions=np.array([
         [1, 0],
         [0, 0],
     ]))
