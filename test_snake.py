@@ -38,27 +38,47 @@ class FastSnake(Sequence):
         return pos in self.positions
 
 
-def test_snake(benchmark):
+def test_benchmark_move(benchmark):
     length = 50
     snake = Snake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (length, 1)))))
     benchmark(snake.move, RIGHT)
     print(snake)
 
 
-def test_fast_snake(benchmark):
+def test_benchmark_move_fast(benchmark):
     length = 50
     snake = FastSnake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (length, 1)))))
     benchmark(snake.move, RIGHT)
     print(snake)
 
 
-def test_snake_collides(benchmark):
+def test_benchmark_grow(benchmark):
+    length = 50
+
+    @benchmark
+    def grow():
+        snake = Snake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (2, 1)))))
+        for _ in range(length):
+            snake.move(RIGHT, grow=True)
+
+
+def test_benchmark_grow_fast(benchmark):
+    length = 50
+
+    @benchmark
+    def grow():
+        snake = FastSnake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (2, 1)))))
+        for _ in range(length):
+            snake.move(RIGHT, grow=True)
+
+
+def test_benchmark_collides(benchmark):
     length = 50
     snake = Snake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (length, 1)))))
     assert not benchmark(snake.collides, (-1, -1))
 
 
-def test_fast_snake_collides(benchmark):
+def test_benchmark_collides_fast(benchmark):
     length = 50
     snake = FastSnake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (length, 1)))))
     assert not benchmark(snake.collides, (-1, -1))
