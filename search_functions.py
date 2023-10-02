@@ -1,4 +1,5 @@
 from math import inf
+from random import choice, shuffle
 from typing import Callable, List
 
 import numpy as np
@@ -30,13 +31,15 @@ def negamax(node, depth, evaluation_function: Callable):
 
 def negamax_move(grid_size, player, opponent, candies, depth, evaluation_function=None):
     best_value = -inf
-    best_move = None
+    best_moves = []
     for move, value in _negamax_moves(grid_size, player, opponent, candies, depth,
                                       evaluation_function):
         if value > best_value:
             best_value = value
-            best_move = move
-    return best_move
+            best_moves = [move]
+        elif value == best_value:
+            best_moves.append(move)
+    return choice(best_moves)
 
 
 def _negamax_moves(grid_size, player, opponent, candies, depth, evaluation_function=None):
@@ -105,14 +108,29 @@ def _negamax_ab_moves(grid_size, player, opponent, candies, depth, evaluation_fu
 
 
 def move_ordering(children: List[Node]) -> List[Node]:
-    def ordering_value(child):
-        if isinstance(child, TerminalNode):
-            return terminal_value(child)
-        # Prefer moves towards the middle
-        middle = child.grid_size[0] // 2, child.grid_size[1] // 2
-        return abs(child.opponent[0][0] - middle[0]) + abs(child.opponent[0][1] - middle[1])
+    winning = []
+    normal = []
+    losing = []
 
-    return sorted(children, key=ordering_value)
+    for node in children:
+        if isinstance(node, TerminalNode):
+            value = terminal_value(node)
+            if value < 0:
+                winning.append(node)
+            elif value > 0:
+                losing.append(node)
+        else:
+            normal.append(node)
+
+    shuffle(winning)
+    # print('yielding winning moves')
+    yield from winning
+    shuffle(normal)
+    # print('yielding normal moves')
+    yield from normal
+    shuffle(losing)
+    # print('yielding losing moves')
+    yield from losing
 
 
 def move_to_enum(move: np.array) -> Move:

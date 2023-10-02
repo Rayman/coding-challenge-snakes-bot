@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from .evaluation_functions import prefer_eating, prefer_battle
-from .search_functions import negamax_move
+from .search_functions import negamax_ab_move
 from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
@@ -35,8 +35,8 @@ class Slifer(Bot):
         else:
             evaluation_function = prefer_eating
 
-        return negamax_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
-        # return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
+        # return negamax_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
+        return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, evaluation_function)
 
 
 class Slifer0(Slifer):
@@ -64,3 +64,12 @@ class Slifer2(Slifer):
     @property
     def name(self):
         return 'Slifer2'
+
+
+class Slifer3(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=3)
+
+    @property
+    def name(self):
+        return 'Slifer3'
