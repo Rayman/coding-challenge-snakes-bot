@@ -303,3 +303,24 @@ def test_voronoy_heuristic2():
     print_array(opponent_dist)
     print_array(player_first)
     print_array(opponent_first)
+
+
+def test_voronoy_heuristic_distinct():
+    grid_size = (3, 3)
+    """
+    |  x  |
+    |  x  |
+    |0 x 1|
+    """
+    print()
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    collision_grid[(1, 1, 1), (0, 1, 2)] = True
+    player_dist = dijkstra((0, 0), collision_grid)
+    opponent_dist = dijkstra((2, 0), collision_grid)
+
+    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+
+    print_array(player_dist)
+    print_array(opponent_dist)
+    print_array(player_first)
+    print_array(opponent_first)
