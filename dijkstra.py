@@ -34,7 +34,7 @@ def dijkstra(start, grid):
 def print_array(grid: np.array):
     a = grid.astype(float)
     a[a == np.iinfo(int).max] = np.inf
-    print(np.flipud(a.T))
+    print(np.array_str(np.flipud(a.T), max_line_width=np.inf))
 
 
 def print_list(grid: List, cols):
