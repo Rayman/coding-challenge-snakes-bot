@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 import pytest
 
@@ -324,3 +326,59 @@ def test_voronoy_heuristic_distinct():
     print_array(opponent_dist)
     print_array(player_first)
     print_array(opponent_first)
+
+
+def test_traveling_salesman():
+    grid_size = (3, 3)
+    """
+    |c c 1|
+    |     |
+    |0   c|
+    """
+    player_head = (0, 0)
+    opponent_head = (2, 2)
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    player_dist = dijkstra(player_head, collision_grid)
+    opponent_dist = dijkstra(opponent_head, collision_grid)
+    candies = dict(enumerate([(0, 2), (1, 2), (2, 0)]))
+
+    print()
+    distance_matrix = defaultdict(dict)
+    for i in range(len(candies)):
+        for j in range(len(candies)):
+            if i != j:
+                ci = candies[i]
+                cj = candies[j]
+                distance_matrix[i][j] = abs(ci[0] - cj[0]) + abs(ci[1] - cj[1])
+
+    for ci, c in candies.items():
+        distance_matrix[-1][ci] = player_dist[c]
+    for ci, c in candies.items():
+        distance_matrix[-2][ci] = player_dist[c]
+
+    print(distance_matrix)
+
+    player_pos = -1
+    opponent_pos = -2
+    player_walked = 0
+    opponent_walked = 0
+    player_candy_order = [0, 1, 2]
+    opponent_candy_order = [0, 1, 2]
+    player_candies_eaten = 0
+    opponent_candies_eaten = 0
+    while True:
+        player_candy_distance = distance_matrix[player_pos][player_candy_order[0]]
+        opponent_candy_distance = distance_matrix[opponent_pos][opponent_candy_order[0]]
+        print(player_candy_distance, opponent_candy_distance)
+        if player_candy_distance <= opponent_candy_distance:
+            print('player eat candy')
+            player_pos = player_candy_order[0]
+            player_candy_order.pop(0)
+            opponent_walked += player_candy_distance
+            player_candies_eaten += 1
+        else:
+            print('opponent eats candy')
+            opponent_pos = opponent_candy_order[0]
+            player_candy_order.pop(0)
+            player_walked += opponent_candy_distance
+            opponent_candies_eaten += 1

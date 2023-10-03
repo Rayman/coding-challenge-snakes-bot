@@ -5,7 +5,6 @@ from matplotlib import pyplot as plt
 
 from .board import Node
 from .board import TerminalNode
-from .dijkstra import print_array
 from .test_dijkstra import dijkstra
 from .utils import neighbors
 
