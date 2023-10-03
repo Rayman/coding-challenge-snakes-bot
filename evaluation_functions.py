@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from .board import Node
 from .board import TerminalNode
@@ -60,8 +61,9 @@ def prefer_battle(node: Node):
 
     # print(np.flipud((player_dist > opponent_dist).T))
     # print(np.flipud((opponent_dist > player_dist).T))
-    voronoy_heuristic = np.count_nonzero(player_dist < opponent_dist) - np.count_nonzero(
-        opponent_dist < player_dist)
+
+    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+    voronoy_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
 
     max_int = np.iinfo(player_dist.dtype).max
     player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
@@ -72,6 +74,43 @@ def prefer_battle(node: Node):
 
     # print(f'voronoy_heuristic={voronoy_heuristic} tail_penalty={tail_penalty}')
     return voronoy_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
+
+
+def calculate_voronoy_areas(player_dist, opponent_dist):
+    max = np.iinfo(player_dist.dtype).max
+    player_first = (player_dist * 2 < opponent_dist * 2 + 1) & (player_dist != max)
+    opponent_first = (opponent_dist * 2 + 1 < player_dist * 2) & (opponent_dist != max)
+    return player_first, opponent_first
+
+
+ax = None
+
+
+def plot_voronoy_heuristic(node: Node):
+    collision_grid = np.zeros(node.grid_size, dtype=bool)
+    for segment in node.player:
+        collision_grid[segment[0], segment[1]] = True
+    for segment in node.opponent:
+        collision_grid[segment[0], segment[1]] = True
+
+    player_dist = dijkstra(node.player[0], collision_grid)
+    opponent_dist = dijkstra(node.opponent[0], collision_grid)
+
+    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+
+    mat = np.zeros(node.grid_size, dtype=player_dist.dtype)
+    mat[player_first] = 8 + player_dist[player_first]
+    mat[opponent_first] = -8 - opponent_dist[opponent_first]
+    mat = np.flipud(mat.T)
+
+    # print_array(mat)
+    global ax
+    if not ax:
+        ax = plt.matshow(mat)
+    else:
+        ax.set_data(mat)
+    plt.draw()
+    plt.pause(1e-6)
 
 
 def terminal_value(node: TerminalNode) -> float:

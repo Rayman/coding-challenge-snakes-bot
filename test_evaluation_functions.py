@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from .evaluation_functions import prefer_eating, prefer_battle
+from .dijkstra import dijkstra, print_array
+from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoy_areas
 from .search_functions import _negamax_moves, _negamax_ab_moves
 from .snake import FastSnake
 from ...constants import Move
@@ -261,3 +262,44 @@ def test_dont_suicide(evaluation_function):
     assert moves[Move.LEFT] == -50
     assert moves[Move.DOWN] > moves[Move.LEFT]
     assert moves[Move.RIGHT] > moves[Move.LEFT]
+
+
+def test_voronoy_heuristic():
+    grid_size = (3, 3)
+    """
+    |x   |
+    |    |
+    |0  1|
+    """
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    collision_grid[0, 2] = True
+    player_dist = dijkstra((0, 0), collision_grid)
+    opponent_dist = dijkstra((2, 0), collision_grid)
+
+    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+
+    print()
+    print_array(player_dist)
+    print_array(opponent_dist)
+    print_array(player_first)
+    print_array(opponent_first)
+
+
+def test_voronoy_heuristic2():
+    grid_size = (4, 3)
+    """
+    |       |
+    |       |
+    |0 - - 1|
+    """
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    player_dist = dijkstra((0, 0), collision_grid)
+    opponent_dist = dijkstra((3, 0), collision_grid)
+
+    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+
+    print()
+    print_array(player_dist)
+    print_array(opponent_dist)
+    print_array(player_first)
+    print_array(opponent_first)
