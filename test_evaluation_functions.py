@@ -188,7 +188,6 @@ def test_minimax_candy_on_body():
     assert moves[Move.DOWN] == moves[Move.RIGHT] > moves[Move.LEFT]
 
 
-@pytest.mark.skip
 def test_bot_prefers_to_be_close():
     grid_size = (3, 4)
     """
@@ -201,12 +200,13 @@ def test_bot_prefers_to_be_close():
     player = FastSnake(id=0, positions=np.vstack(([1, 3], np.tile([0, 3], (20, 1)))))
     opponent = FastSnake(id=1, positions=np.vstack(([1, 0], np.tile([0, 0], (20, 1)))))
     candies = []
-    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
+    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0, prefer_battle))
     print(moves)
     assert moves[Move.DOWN] > moves[Move.RIGHT] > moves[Move.LEFT]
 
 
-def test_suicide():
+@pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
+def test_suicide(evaluation_function):
     grid_size = (5, 3)
     """
     It's player 0 turn. If you suicide you win
@@ -227,17 +227,18 @@ def test_suicide():
     ]))
     candies = []
 
-    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
+    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0, evaluation_function))
     print(moves)
 
     assert moves[Move.LEFT] == 99
     assert moves[Move.LEFT] > moves[Move.DOWN]
 
 
-def test_dont_suicide():
+@pytest.mark.parametrize('evaluation_function', [prefer_eating, prefer_battle])
+def test_dont_suicide(evaluation_function):
     grid_size = (5, 3)
     """
-    It's player 0 turn. If you suicide you win
+    It's player 0 turn. If you suicide you DRAW
     |0 0 0 0   |
     |          |
     |1 1       |
@@ -254,8 +255,9 @@ def test_dont_suicide():
     ]))
     candies = []
 
-    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
+    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0, evaluation_function))
     print(moves)
 
     assert moves[Move.LEFT] == -50
     assert moves[Move.DOWN] > moves[Move.LEFT]
+    assert moves[Move.RIGHT] > moves[Move.LEFT]
