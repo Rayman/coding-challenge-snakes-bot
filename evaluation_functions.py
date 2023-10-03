@@ -65,9 +65,6 @@ def prefer_battle(node: Node):
 
     player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
     voronoy_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    # player_first, opponent_first = old_calculate_voronoy_areas(player_dist, opponent_dist)
-    # old_voronoy_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    # print(f'voronoy_heuristic={voronoy_heuristic} old_voronoy_heuristic={old_voronoy_heuristic}')
 
     max_int = np.iinfo(player_dist.dtype).max
     player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
@@ -78,46 +75,6 @@ def prefer_battle(node: Node):
 
     # print(f'voronoy_heuristic={voronoy_heuristic} tail_penalty={tail_penalty}')
     return voronoy_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
-
-
-def old_prefer_battle(node: Node):
-    collision_grid = np.zeros(node.grid_size, dtype=bool)
-    for segment in node.player:
-        collision_grid[segment[0], segment[1]] = True
-    for segment in node.opponent:
-        collision_grid[segment[0], segment[1]] = True
-
-    # It's players turn, so if player doesn't have any legal moves left, the opponent has won
-    number_of_moves = len(list(neighbors(*node.player[0], collision_grid)))
-    if number_of_moves == 0:
-        # print(f'Player {node.player.id} has no legal moves available, opponent={node.opponent.id} will survive')
-        return -terminal_value(TerminalNode(node.opponent, node.player))
-    # We can't yet check how many legal moves the opponent has available, because player still needs to move
-
-    player_dist = dijkstra(node.player[0], collision_grid)
-    # print('player:\n', np.flipud(player_dist.T))
-
-    opponent_dist = dijkstra(node.opponent[0], collision_grid)
-    # print('opponent:\n', np.flipud(opponent_dist.T))
-
-    # print(np.flipud((player_dist > opponent_dist).T))
-    # print(np.flipud((opponent_dist > player_dist).T))
-
-    # player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
-    # voronoy_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    player_first, opponent_first = old_calculate_voronoy_areas(player_dist, opponent_dist)
-    old_voronoy_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    # print(f'voronoy_heuristic={voronoy_heuristic} old_voronoy_heuristic={old_voronoy_heuristic}')
-
-    max_int = np.iinfo(player_dist.dtype).max
-    player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
-                               default=max_int)
-    player_opponent_dist = min(*node.grid_size, player_opponent_dist)
-
-    tail_heuristic = tail_penalty(node, collision_grid, player_dist, opponent_dist)
-
-    # print(f'voronoy_heuristic={voronoy_heuristic} tail_penalty={tail_penalty}')
-    return old_voronoy_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
 
 
 def calculate_voronoy_areas(player_dist, opponent_dist):
@@ -132,18 +89,6 @@ def calculate_voronoy_areas(player_dist, opponent_dist):
 
     player_first = (both_reachable & player_first) | only_player_reachable
     opponent_first = (both_reachable & opponent_first) | only_opponent_reachable
-
-    # mat = np.zeros(player_dist.shape, dtype=player_dist.dtype)
-    # mat[player_first] = player_dist[player_first]
-    # mat[opponent_first] = - opponent_dist[opponent_first]
-    # print_array(mat)
-
-    return player_first, opponent_first
-
-
-def old_calculate_voronoy_areas(player_dist, opponent_dist):
-    player_first = player_dist < opponent_dist
-    opponent_first = opponent_dist < player_dist
 
     # mat = np.zeros(player_dist.shape, dtype=player_dist.dtype)
     # mat[player_first] = player_dist[player_first]
