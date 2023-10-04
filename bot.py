@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from .evaluation_functions import prefer_eating, prefer_battle
-from .search_functions import negamax_ab_move, negamax_move
+from .search_functions import negamax_ab_move
 from .snake import FastSnake
 from ...bot import Bot
 from ...constants import Move
@@ -27,8 +27,14 @@ class Slifer(Bot):
         player = FastSnake(id=snake.id, positions=snake.positions)
         opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
 
-        if len(player) > len(opponent) > 10:
+        length_margin = len(player) * 2 - len(opponent)
+        # closest_candy = min(np.linalg.norm(snake[0] - c, 1) for c in candies)
+        # player_distance = abs(player[0][0] - opponent[0][0]) + abs(player[0][1] - opponent[0][1])
+
+        if length_margin > 10:
             self.battle_mode = True
+        elif length_margin < 5:
+            self.battle_mode = False
 
         if self.battle_mode:
             return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_battle)
