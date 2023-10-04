@@ -31,12 +31,18 @@ def prefer_eating(node: Node):
 
     length_difference = len(node.player) - len(node.opponent)
 
+    ncb = new_candy_bonus(player_dist, opponent_dist, node.candies)
+
     player_candy_bonus = candy_bonus(player_dist, node.candies)  # if len(node.player) < 10 else 0
     opponent_candy_bonus = candy_bonus(opponent_dist, node.candies)  # if len(node.opponent) < 10 else 0
 
+    # print(f'player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
+    # print(f'old={player_candy_bonus - opponent_candy_bonus} new={ncb}')
+
     # print(f'player_opponent_dist={player_opponent_dist}')
     # print(f'length_difference={length_difference} player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
-    return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)
+    # return length_difference + 0.01 * (player_candy_bonus - opponent_candy_bonus)
+    return length_difference + 0.01 * ncb
 
 
 def prefer_battle(node: Node):
@@ -173,3 +179,26 @@ def _distance_to_candy(dist: np.array, candies: List[np.array]):
         return 0
 
     return min(dist[candy[0], candy[1]] for candy in candies)
+
+
+def new_candy_bonus(player_dist, opponent_dist, candies: List[np.array]):
+    if not candies:
+        return 0
+    player_candy_index = min(range(len(candies)), key=lambda i: player_dist[tuple(candies[i])])
+    opponent_candy_index = min(range(len(candies)), key=lambda i: opponent_dist[tuple(candies[i])])
+    # print('original candy assignment:', player_candy_index, opponent_candy_index)
+    if player_candy_index == opponent_candy_index:
+        if player_dist[tuple(candies[player_candy_index])] > opponent_dist[tuple(candies[opponent_candy_index])]:
+            # print('player has to choose a different candy')
+            player_candy_index = min((i for i in range(len(candies)) if i != opponent_candy_index),
+                                     key=lambda i: player_dist[tuple(candies[i])], default=-1)
+        else:
+            # print('opponent has to choose a different candy')
+            opponent_candy_index = min((i for i in range(len(candies)) if i != player_candy_index),
+                                       key=lambda i: opponent_dist[tuple(candies[i])], default=-1)
+    # print(f'resolution:', player_candy_index, opponent_candy_index)
+    player_candy_bonus = player_dist[tuple(candies[player_candy_index])] if player_candy_index != -1 else 40
+    opponent_candy_bonus = opponent_dist[tuple(candies[opponent_candy_index])] if opponent_candy_index != -1 else 40
+    # print(f'new player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
+    cb = opponent_candy_bonus - player_candy_bonus
+    return min(40, max(-40, cb))

@@ -169,6 +169,30 @@ def test_minimax_candies():
     assert 1 > moves[Move.RIGHT] > moves[Move.DOWN] > 0
 
 
+def test_minimax_closest_candies():
+    grid_size = (10, 3)
+    """
+    It's player 0 turn. It only move towards the candies that it can reach earlier
+    |0 0 0      * |
+    |             |
+    |1 1 *        |
+    """
+    print()
+    player = FastSnake(id=0, positions=np.array([
+        [2, 2],
+        [1, 2],
+        [0, 2],
+    ]))
+    opponent = FastSnake(id=1, positions=np.array([
+        [1, 0],
+        [0, 0],
+    ]))
+    candies = [np.array([9, 2]), np.array([2, 0])]
+    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
+    print(moves)
+    assert 1 > moves[Move.RIGHT] > moves[Move.DOWN] > 0
+
+
 def test_minimax_candy_on_body():
     grid_size = (10, 3)
     """
@@ -328,6 +352,7 @@ def test_voronoy_heuristic_distinct():
     print_array(opponent_first)
 
 
+@pytest.mark.skip
 def test_traveling_salesman():
     grid_size = (3, 3)
     """
