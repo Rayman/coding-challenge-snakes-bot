@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 
-from .utils import is_on_grid, neighbors
+from .utils import is_on_grid
 
 
 def dijkstra(start, grid):
@@ -19,17 +19,42 @@ def dijkstra(start, grid):
     queue.append(start)
 
     while queue:
-        current = queue.popleft()
-        new_dist = dist[current[0] * grid.shape[1] + current[1]] + 1
+        i, j = queue.popleft()
+        new_dist = dist[i * grid.shape[1] + j] + 1
         # print(f'inspecting {current} new_dist={new_dist}')
 
-        for neighbor in neighbors(*current, grid):
-            i = neighbor[0] * grid.shape[1] + neighbor[1]
-            if new_dist < dist[i]:
-                dist[i] = new_dist
-                # print(f'pushing {neighbor}')
-                queue.append(neighbor)
-
+        if i > 0:
+            neighbor = i - 1, j
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if j > 0:
+            neighbor = i, j - 1
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if i < grid.shape[0] - 1:
+            neighbor = i + 1, j
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if j < grid.shape[1] - 1:
+            neighbor = i, j + 1
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
     return np.array(dist).reshape(-1, grid.shape[1])
 
 
