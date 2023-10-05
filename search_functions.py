@@ -80,7 +80,7 @@ def negamax_ab(node, depth, a, b, evaluation_function: Callable):
 def negamax_ab_move(grid_size, player, opponent, candies, depth, evaluation_function=None):
     evaluation_function = prefer_eating if evaluation_function is None else evaluation_function
     node = Node(grid_size, player, opponent, candies)
-    # plot_voronoy_heuristic(node)
+    # plot_voronoi_heuristic(node)
     best_value = -inf
     best_move = None
     a = -inf  # lower bound on

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from .dijkstra import dijkstra, print_array
-from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoy_areas
+from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoi_areas
 from .search_functions import _negamax_moves, _negamax_ab_moves
 from .snake import FastSnake
 from ...constants import Move
@@ -290,7 +290,7 @@ def test_dont_suicide(evaluation_function):
     assert moves[Move.RIGHT] > moves[Move.LEFT]
 
 
-def test_voronoy_heuristic():
+def test_voronoi_heuristic():
     grid_size = (3, 3)
     """
     |x   |
@@ -302,7 +302,7 @@ def test_voronoy_heuristic():
     player_dist = dijkstra((0, 0), collision_grid)
     opponent_dist = dijkstra((2, 0), collision_grid)
 
-    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+    player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
 
     print()
     print_array(player_dist)
@@ -311,7 +311,7 @@ def test_voronoy_heuristic():
     print_array(opponent_first)
 
 
-def test_voronoy_heuristic2():
+def test_voronoi_heuristic2():
     grid_size = (4, 3)
     """
     |       |
@@ -322,7 +322,7 @@ def test_voronoy_heuristic2():
     player_dist = dijkstra((0, 0), collision_grid)
     opponent_dist = dijkstra((3, 0), collision_grid)
 
-    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+    player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
 
     print()
     print_array(player_dist)
@@ -331,7 +331,7 @@ def test_voronoy_heuristic2():
     print_array(opponent_first)
 
 
-def test_voronoy_heuristic_distinct():
+def test_voronoi_heuristic_distinct():
     grid_size = (3, 3)
     """
     |  x  |
@@ -344,7 +344,7 @@ def test_voronoy_heuristic_distinct():
     player_dist = dijkstra((0, 0), collision_grid)
     opponent_dist = dijkstra((2, 0), collision_grid)
 
-    player_first, opponent_first = calculate_voronoy_areas(player_dist, opponent_dist)
+    player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
 
     print_array(player_dist)
     print_array(opponent_dist)
