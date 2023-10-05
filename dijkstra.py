@@ -65,11 +65,11 @@ class LinearQueue:
         self.queue = []
         self.first = 0
 
-    def put(self, item):
+    def append(self, item):
         """Put the item on the queue."""
         self.queue.append(item)
 
-    def get(self):
+    def popleft(self):
         """Remove and return an item from the queue."""
         item = self.queue[self.first]
         self.first += 1
@@ -89,14 +89,14 @@ class CircularQueue:
         self.last = 0
         self.len = 0
 
-    def put(self, item):
+    def append(self, item):
         """Put the item on the queue."""
         assert self.len < len(self.queue)
         self.queue[self.last] = item
         self.last = (self.last + 1) & 31
         self.len += 1
 
-    def get(self):
+    def popleft(self):
         """Remove and return an item from the queue."""
         item = self.queue[self.first]
         self.first = (self.first + 1) & 31
