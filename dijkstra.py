@@ -58,6 +58,58 @@ def dijkstra(start, grid):
     return np.array(dist).reshape(-1, grid.shape[1])
 
 
+def dijkstra2(starting_points, grid):
+    assert all([is_on_grid(start, grid.shape) for start, _ in starting_points])
+
+    queue = deque()
+    # queue = LinearQueue()
+    # queue = CircularQueue()
+
+    dist = [np.iinfo(int).max] * grid.size
+    for start, distance in starting_points:
+        dist[start[0] * grid.shape[1] + start[1]] = distance
+        queue.append(start)
+
+    while queue:
+        i, j = queue.popleft()
+        new_dist = dist[i * grid.shape[1] + j] + 2
+        # print(f'inspecting {current} new_dist={new_dist}')
+
+        if i > 0:
+            neighbor = i - 1, j
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if j > 0:
+            neighbor = i, j - 1
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if i < grid.shape[0] - 1:
+            neighbor = i + 1, j
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+        if j < grid.shape[1] - 1:
+            neighbor = i, j + 1
+            if not grid[neighbor]:
+                index = neighbor[0] * grid.shape[1] + neighbor[1]
+                if new_dist < dist[index]:
+                    dist[index] = new_dist
+                    # print(f'pushing {neighbor}')
+                    queue.append(neighbor)
+    return np.array(dist).reshape(-1, grid.shape[1])
+
+
 class LinearQueue:
     __slots__ = ['queue', 'first']
 
