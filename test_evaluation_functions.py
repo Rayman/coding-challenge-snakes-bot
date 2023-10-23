@@ -3,8 +3,8 @@ from collections import defaultdict
 import numpy as np
 import pytest
 
-from .dijkstra import dijkstra, print_array
-from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoi_areas
+from .dijkstra import dijkstra, print_array, array2str
+from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoi_diagram, calculate_voronoi_areas
 from .search_functions import _negamax_moves, _negamax_ab_moves
 from .snake import FastSnake
 from ...constants import Move
@@ -155,6 +155,7 @@ def test_minimax_candies():
     |             |
     |1 1          |
     """
+    print()
     player = FastSnake(id=0, positions=np.array([
         [1, 2],
         [0, 2],
@@ -165,7 +166,7 @@ def test_minimax_candies():
     ]))
     candies = [np.array([9, 2])]
     moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
-
+    print(moves)
     assert 1 > moves[Move.RIGHT] > moves[Move.DOWN] > 0
 
 
@@ -290,7 +291,7 @@ def test_dont_suicide(evaluation_function):
     assert moves[Move.RIGHT] > moves[Move.LEFT]
 
 
-def test_voronoi_heuristic():
+def test_calculate_voronoi_areas():
     grid_size = (3, 3)
     """
     |x   |
@@ -311,7 +312,7 @@ def test_voronoi_heuristic():
     print_array(opponent_first)
 
 
-def test_voronoi_heuristic2():
+def test_calculate_voronoi_areas2():
     grid_size = (4, 3)
     """
     |       |
@@ -331,7 +332,7 @@ def test_voronoi_heuristic2():
     print_array(opponent_first)
 
 
-def test_voronoi_heuristic_distinct():
+def test_calculate_voronoi_areas_distinct():
     grid_size = (3, 3)
     """
     |  x  |
@@ -348,6 +349,59 @@ def test_voronoi_heuristic_distinct():
 
     print_array(player_dist)
     print_array(opponent_dist)
+    print_array(player_first)
+    print_array(opponent_first)
+
+
+def test_calculate_voronoi_diagram():
+    grid_size = (3, 3)
+    """
+    |x   |
+    |    |
+    |0  1|
+    """
+    print()
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    collision_grid[0, 2] = True
+    player_head = (0, 0)
+    opponent_head = (2, 0)
+    player_first, opponent_first = calculate_voronoi_diagram(collision_grid, player_head, opponent_head)
+
+    print(f'player_first=\n{array2str(player_first)}')
+    print(f'opponent_first=\n{array2str(opponent_first)}')
+
+
+def test_calculate_voronoi_diagram2():
+    grid_size = (4, 3)
+    """
+    |       |
+    |       |
+    |0 - - 1|
+    """
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    player_head = (0, 0)
+    opponent_head = (3, 0)
+    player_first, opponent_first = calculate_voronoi_diagram(collision_grid, player_head, opponent_head)
+
+    print()
+    print_array(player_first)
+    print_array(opponent_first)
+
+
+def test_calculate_voronoi_diagram_distinct():
+    grid_size = (3, 3)
+    """
+    |  x  |
+    |  x  |
+    |0 x 1|
+    """
+    print()
+    collision_grid = np.zeros(grid_size, dtype=bool)
+    collision_grid[(1, 1, 1), (0, 1, 2)] = True
+    player_head = (0, 0)
+    opponent_head = (2, 0)
+    player_first, opponent_first = calculate_voronoi_diagram(collision_grid, player_head, opponent_head)
+
     print_array(player_first)
     print_array(opponent_first)
 
