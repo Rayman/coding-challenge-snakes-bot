@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 from .board import Node
 from .board import TerminalNode
-from .dijkstra import dijkstra2, print_array
+from .dijkstra import dijkstra2, print_array, dijkstra
 from .utils import neighbors
 
 
@@ -23,16 +23,30 @@ def prefer_eating(node: Node):
         return -terminal_value(TerminalNode(node.opponent, node.player))
     # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
-    player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
-    player_dist = player_dist.filled()
-    opponent_dist = opponent_dist.filled()
+    player_dist = dijkstra(node.player[0], collision_grid)
+    # print('player:\n', np.flipud(player_dist.T))
+
+    opponent_dist = dijkstra(node.opponent[0], collision_grid)
+    # print('opponent:\n', np.flipud(opponent_dist.T))
+
+    old_candy_bonus = calculate_candy_bonus(player_dist, opponent_dist, node.candies)
+
+    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    # print('player:\n', print_array(player_dist))
+
+    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    # player_dist = player_dist.filled()
+    # opponent_dist = opponent_dist.filled()
 
     length_difference = len(node.player) - len(node.opponent)
 
-    candy_bonus = calculate_candy_bonus(player_dist, opponent_dist, node.candies)
+    # candy_bonus = calculate_new_candy_bonus(player_dist, opponent_dist, node.candies, node.player[0], node.opponent[0])
+    # if candy_bonus != old_candy_bonus:
+    #     print(f'candy_bonus={candy_bonus} != old_candy_bonus={old_candy_bonus}')
+    #     pass
     # print(f'score={length_difference + 0.01 * candy_bonus} '
     #       f'length_difference={length_difference} candy_bonus={candy_bonus}')
-    return length_difference + 0.01 * candy_bonus
+    return length_difference + 0.01 * old_candy_bonus
 
 
 def prefer_battle(node: Node):
@@ -165,6 +179,7 @@ def tail_penalty(node: Node, collision_grid, player_dist, opponent_dist):
 def calculate_candy_bonus(player_dist, opponent_dist, candies: List[np.array]):
     if not candies:
         return 0
+    # print('calculate_old_candy_bonus')
     player_candy_index = min(range(len(candies)), key=lambda i: player_dist[tuple(candies[i])])
     opponent_candy_index = min(range(len(candies)), key=lambda i: opponent_dist[tuple(candies[i])])
     # print(f'original candy assignment: player={player_candy_index},d={player_dist[tuple(candies[player_candy_index])]} opponent={opponent_candy_index},d={opponent_dist[tuple(candies[opponent_candy_index])]}')
@@ -183,3 +198,33 @@ def calculate_candy_bonus(player_dist, opponent_dist, candies: List[np.array]):
     # print(f'new player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
     cb = opponent_candy_bonus - player_candy_bonus
     return min(40, max(-40, cb))
+
+
+def calculate_new_candy_bonus(player_dist, opponent_dist, candies: List[np.array], player_head, opponent_head):
+    if not candies:
+        return 0
+    # print('calculate_candy_bonus')
+    player_candy_index = min(range(len(candies)), key=lambda i: player_dist[tuple(candies[i])])
+    opponent_candy_index = min(range(len(candies)), key=lambda i: opponent_dist[tuple(candies[i])])
+    # print(f'original candy assignment: player={player_candy_index},d={player_dist[tuple(candies[player_candy_index])]} opponent={opponent_candy_index},d={opponent_dist[tuple(candies[opponent_candy_index])]}')
+
+    candy_bonus = 0
+    int_max = np.iinfo(player_dist.dtype).max
+
+    if player_dist[tuple(candies[player_candy_index])] != int_max:
+        player_candy_bonus = 40 - player_dist[tuple(candies[player_candy_index])]
+    else:
+        # all candies are closer to the other player. Choose another candy, still a chance to eat it
+        print("player can't reach all candies")
+        player_candy_bonus = 16 - min((np.linalg.norm(candies[i] - player_head)
+                                       for i in range(len(candies)) if i != opponent_candy_index), default=16)
+
+    if opponent_dist[tuple(candies[opponent_candy_index])] != int_max:
+        opponent_candy_bonus = 40 - opponent_dist[tuple(candies[opponent_candy_index])]
+    else:
+        # all candies are closer to the other player. Choose another candy, still a chance to eat it
+        print("opponent can't reach all candies")
+        opponent_candy_bonus = 16 - min((np.linalg.norm(candies[i] - opponent_head)
+                                         for i in range(len(candies)) if i != player_candy_index), default=16)
+    print(f'player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
+    return player_candy_bonus - opponent_candy_bonus
