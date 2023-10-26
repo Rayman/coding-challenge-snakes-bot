@@ -401,7 +401,8 @@ def test_calculate_voronoi_diagram_distinct():
     player_head = (0, 0)
     opponent_head = (2, 0)
     player_first, opponent_first = calculate_voronoi_diagram(collision_grid, player_head, opponent_head)
-
+    print(player_first)
+    print(opponent_first)
     print_array(player_first)
     print_array(opponent_first)
 

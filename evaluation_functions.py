@@ -63,20 +63,30 @@ def prefer_battle(node: Node):
         return -terminal_value(TerminalNode(node.opponent, node.player))
     # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
-    player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
-    voronoi_heuristic = player_dist.count() - opponent_dist.count()
-    player_dist = player_dist.filled()
-    opponent_dist = opponent_dist.filled()
+    # player_dist = dijkstra(node.player[0], collision_grid)
+    # print('player:\n', np.flipud(player_dist.T))
 
-    max_int = np.iinfo(player_dist.dtype).max
-    player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
-                               default=max_int)
-    player_opponent_dist = min(*node.grid_size, player_opponent_dist)
+    # opponent_dist = dijkstra(node.opponent[0], collision_grid)
+    # print('opponent:\n', np.flipud(opponent_dist.T))
+    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
 
-    tail_heuristic = tail_penalty(node, collision_grid, player_dist, opponent_dist)
+    # print(np.flipud((player_dist > opponent_dist).T))
+    # print(np.flipud((opponent_dist > player_dist).T))
+
+    # player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
+    # voronoi_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
+    # voronoi_heuristic = np.count_nonzero(player_dist) - np.count_nonzero(opponent_dist)
+
+    new_player_dist, new_opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    new_voronoi_heuristic = new_player_dist.count() - new_opponent_dist.count()
+
+    new_player_dist = new_player_dist.filled()
+    new_opponent_dist = new_opponent_dist.filled()
+
+    tail_heuristic = tail_penalty(node, collision_grid, new_player_dist, new_opponent_dist)
 
     # print(f'voronoi_heuristic={voronoi_heuristic} tail_penalty={tail_penalty}')
-    return voronoi_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
+    return new_voronoi_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
 
 
 def calculate_voronoi_areas(player_dist, opponent_dist):
@@ -102,13 +112,13 @@ def calculate_voronoi_areas(player_dist, opponent_dist):
 
 def calculate_voronoi_diagram(collision_grid, player_head, opponent_head):
     voronoi = dijkstra2(((player_head, 0), (opponent_head, 1)), collision_grid)
+    max_int = np.iinfo(voronoi.dtype).max
     # print(f'voronoi=\n{array2str(voronoi)}')
-    free = ~collision_grid
+    free = ~(collision_grid | voronoi == max_int)
     player_first = ~(voronoi & 1).astype(bool) & free
     opponent_first = (voronoi & 1).astype(bool) & free
     # print(f'player_first=\n{array2str(player_first)}')
     # print(f'opponent_first=\n{array2str(opponent_first)}')
-    max_int = np.iinfo(voronoi.dtype).max
     player_dist = np.ma.masked_array(voronoi, ~player_first, fill_value=max_int)
     opponent_dist = np.ma.masked_array(voronoi, ~opponent_first, fill_value=max_int)
     return player_dist, opponent_dist

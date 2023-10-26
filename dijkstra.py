@@ -164,6 +164,8 @@ class CircularQueue:
 
 def array2str(grid: np.array) -> str:
     a = grid.astype(float)
+    if np.ma.isMaskedArray(a):
+        a = a.filled()
     a[a == np.iinfo(int).max] = np.inf
     return np.array_str(np.flipud(a.T), max_line_width=np.inf)
 
