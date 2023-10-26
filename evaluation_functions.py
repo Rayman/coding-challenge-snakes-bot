@@ -63,51 +63,15 @@ def prefer_battle(node: Node):
         return -terminal_value(TerminalNode(node.opponent, node.player))
     # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
-    # player_dist = dijkstra(node.player[0], collision_grid)
-    # print('player:\n', np.flipud(player_dist.T))
-
-    # opponent_dist = dijkstra(node.opponent[0], collision_grid)
-    # print('opponent:\n', np.flipud(opponent_dist.T))
-    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
-
-    # print(np.flipud((player_dist > opponent_dist).T))
-    # print(np.flipud((opponent_dist > player_dist).T))
-
-    # player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
-    # voronoi_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    # voronoi_heuristic = np.count_nonzero(player_dist) - np.count_nonzero(opponent_dist)
-
     new_player_dist, new_opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
     new_voronoi_heuristic = new_player_dist.count() - new_opponent_dist.count()
+    # new_player_dist = new_player_dist.filled()
+    # new_opponent_dist = new_opponent_dist.filled()
 
-    new_player_dist = new_player_dist.filled()
-    new_opponent_dist = new_opponent_dist.filled()
-
-    tail_heuristic = tail_penalty(node, collision_grid, new_player_dist, new_opponent_dist)
+    # tail_heuristic = tail_penalty(node, collision_grid, new_player_dist, new_opponent_dist)
 
     # print(f'voronoi_heuristic={voronoi_heuristic} tail_penalty={tail_penalty}')
     return new_voronoi_heuristic / node.grid_size[0] / node.grid_size[1]  # + tail_penalty
-
-
-def calculate_voronoi_areas(player_dist, opponent_dist):
-    max = np.iinfo(player_dist.dtype).max
-
-    only_player_reachable = (player_dist != max) & (opponent_dist == max)
-    only_opponent_reachable = (player_dist == max) & (opponent_dist != max)
-    both_reachable = (player_dist != max) & (opponent_dist != max)
-
-    player_first = (player_dist * 2 < opponent_dist * 2 + 1) & (player_dist != max)
-    opponent_first = (opponent_dist * 2 + 1 < player_dist * 2) & (opponent_dist != max)
-
-    player_first = (both_reachable & player_first) | only_player_reachable
-    opponent_first = (both_reachable & opponent_first) | only_opponent_reachable
-
-    # mat = np.zeros(player_dist.shape, dtype=player_dist.dtype)
-    # mat[player_first] = player_dist[player_first]
-    # mat[opponent_first] = - opponent_dist[opponent_first]
-    # print_array(mat)
-
-    return player_first, opponent_first
 
 
 def calculate_voronoi_diagram(collision_grid, player_head, opponent_head):
