@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 from .board import Node
 from .board import TerminalNode
-from .dijkstra import dijkstra2, print_array, dijkstra, array2str
+from .dijkstra import dijkstra2, print_array
 from .utils import neighbors
 
 
@@ -23,14 +23,9 @@ def prefer_eating(node: Node):
         return -terminal_value(TerminalNode(node.opponent, node.player))
     # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
-    player_dist = dijkstra(node.player[0], collision_grid)
-    # print('player:\n', np.flipud(player_dist.T))
-
-    opponent_dist = dijkstra(node.opponent[0], collision_grid)
-    # print('opponent:\n', np.flipud(opponent_dist.T))
-
-    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
-    # print('player:\n', print_array(player_dist))
+    player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    player_dist = player_dist.filled()
+    opponent_dist = opponent_dist.filled()
 
     length_difference = len(node.player) - len(node.opponent)
 
@@ -54,19 +49,10 @@ def prefer_battle(node: Node):
         return -terminal_value(TerminalNode(node.opponent, node.player))
     # We can't yet check how many legal moves the opponent has available, because player still needs to move
 
-    player_dist = dijkstra(node.player[0], collision_grid)
-    # print('player:\n', np.flipud(player_dist.T))
-
-    opponent_dist = dijkstra(node.opponent[0], collision_grid)
-    # print('opponent:\n', np.flipud(opponent_dist.T))
-    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
-
-    # print(np.flipud((player_dist > opponent_dist).T))
-    # print(np.flipud((opponent_dist > player_dist).T))
-
-    player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
-    voronoi_heuristic = np.count_nonzero(player_first) - np.count_nonzero(opponent_first)
-    # voronoi_heuristic = np.count_nonzero(player_dist) - np.count_nonzero(opponent_dist)
+    player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    voronoi_heuristic = player_dist.count() - opponent_dist.count()
+    player_dist = player_dist.filled()
+    opponent_dist = opponent_dist.filled()
 
     max_int = np.iinfo(player_dist.dtype).max
     player_opponent_dist = min((player_dist[n[0], n[1]] for n in neighbors(*node.opponent[0], collision_grid)),
@@ -102,14 +88,16 @@ def calculate_voronoi_areas(player_dist, opponent_dist):
 
 def calculate_voronoi_diagram(collision_grid, player_head, opponent_head):
     voronoi = dijkstra2(((player_head, 0), (opponent_head, 1)), collision_grid)
-    print(f'voronoi=\n{array2str(voronoi)}')
+    # print(f'voronoi=\n{array2str(voronoi)}')
     free = ~collision_grid
-    player_first = ~(voronoi & 1) & free
-    opponent_first = voronoi & 1 & free
-    print(f'player_first=\n{array2str(player_first)}')
-    print(f'opponent_first=\n{array2str(opponent_first)}')
-    print(f'player inverse=\n{array2str(~player_first)}')
-    return np.ma.masked_array(voronoi, player_first), np.ma.masked_array(voronoi, opponent_first)
+    player_first = ~(voronoi & 1).astype(bool) & free
+    opponent_first = (voronoi & 1).astype(bool) & free
+    # print(f'player_first=\n{array2str(player_first)}')
+    # print(f'opponent_first=\n{array2str(opponent_first)}')
+    max_int = np.iinfo(voronoi.dtype).max
+    player_dist = np.ma.masked_array(voronoi, ~player_first, fill_value=max_int)
+    opponent_dist = np.ma.masked_array(voronoi, ~opponent_first, fill_value=max_int)
+    return player_dist, opponent_dist
 
 
 ax = None
@@ -122,14 +110,10 @@ def plot_voronoi_heuristic(node: Node):
     for segment in node.opponent:
         collision_grid[segment[0], segment[1]] = True
 
-    player_dist = dijkstra(node.player[0], collision_grid)
-    opponent_dist = dijkstra(node.opponent[0], collision_grid)
-
-    player_first, opponent_first = calculate_voronoi_areas(player_dist, opponent_dist)
-    # player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+    player_dist, opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
     mat = np.zeros(node.grid_size, dtype=player_dist.dtype)
-    mat[player_first] = 8 + player_dist[player_first]
-    mat[opponent_first] = -8 - opponent_dist[opponent_first]
+    mat[~player_dist.mask] = 8 + player_dist[~player_dist.mask]
+    mat[~opponent_dist.mask] = -8 - opponent_dist[~opponent_dist.mask]
     mat = np.flipud(mat.T)
 
     print_array(mat)
@@ -183,7 +167,7 @@ def calculate_candy_bonus(player_dist, opponent_dist, candies: List[np.array]):
         return 0
     player_candy_index = min(range(len(candies)), key=lambda i: player_dist[tuple(candies[i])])
     opponent_candy_index = min(range(len(candies)), key=lambda i: opponent_dist[tuple(candies[i])])
-    # print('original candy assignment:', player_candy_index, opponent_candy_index)
+    # print(f'original candy assignment: player={player_candy_index},d={player_dist[tuple(candies[player_candy_index])]} opponent={opponent_candy_index},d={opponent_dist[tuple(candies[opponent_candy_index])]}')
     if player_candy_index == opponent_candy_index:
         if player_dist[tuple(candies[player_candy_index])] > opponent_dist[tuple(candies[opponent_candy_index])]:
             # print('player has to choose a different candy')
@@ -193,7 +177,7 @@ def calculate_candy_bonus(player_dist, opponent_dist, candies: List[np.array]):
             # print('opponent has to choose a different candy')
             opponent_candy_index = min((i for i in range(len(candies)) if i != player_candy_index),
                                        key=lambda i: opponent_dist[tuple(candies[i])], default=-1)
-    # print(f'resolution:', player_candy_index, opponent_candy_index)
+    # print(f'resolution: player={player_candy_index},d={player_dist[tuple(candies[player_candy_index])]} opponent={opponent_candy_index},d={opponent_dist[tuple(candies[opponent_candy_index])]}')
     player_candy_bonus = player_dist[tuple(candies[player_candy_index])] if player_candy_index != -1 else 40
     opponent_candy_bonus = opponent_dist[tuple(candies[opponent_candy_index])] if opponent_candy_index != -1 else 40
     # print(f'new player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
