@@ -1,10 +1,12 @@
 from collections import defaultdict
+from functools import partial
 
 import numpy as np
 import pytest
 
+from .bot import Parameters
 from .dijkstra import dijkstra, print_array, array2str
-from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoi_diagram
+from .evaluation_functions import prefer_eating, prefer_battle, calculate_voronoi_diagram, eat_and_battle
 from .search_functions import _negamax_moves, _negamax_ab_moves
 from .snake import FastSnake
 from ...constants import Move
@@ -66,7 +68,6 @@ class TestCorner:
         assert moves[Move.RIGHT] == -1
 
 
-@pytest.mark.skip
 def test_minimax_avoid_dead_ends():
     grid_size = (3, 6)
     """
@@ -91,7 +92,9 @@ def test_minimax_avoid_dead_ends():
         [2, 0],
     ]))
     candies = []
-    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0))
+
+    moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0,
+                                partial(eat_and_battle, parameters=Parameters())))
     # round_values(moves)
     print(moves)
     assert moves[Move.DOWN] > moves[Move.UP] > moves[Move.LEFT]

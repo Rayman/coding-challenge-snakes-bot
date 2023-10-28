@@ -1,6 +1,8 @@
+from dataclasses import dataclass
+from functools import partial
 from typing import Tuple
 
-from .evaluation_functions import prefer_eating, prefer_battle
+from .evaluation_functions import prefer_eating, prefer_battle, eat_and_battle
 from .search_functions import negamax_ab_move
 from .snake import FastSnake
 from ...bot import Bot
@@ -9,11 +11,22 @@ from ...constants import Move
 __all__ = ['Slifer']
 
 
+@dataclass
+class Parameters:
+    battle_mode_stop: int = 5  # length margin lower than this will enable eating mode
+    battle_mode_margin: int = 5  # battle mode starts at battle_mode_stop + battle_mode_margin
+
+    candy_bonus_scaling: float = 1
+    voronoi_heuristic_scaling: float = 0.1
+    voronoi_max: float = 20
+
+
 class Slifer(Bot):
     def __init__(self, id: int, grid_size: Tuple[int, int], depth=2):
         super().__init__(id=id, grid_size=grid_size)
         self.battle_mode = False
         self.depth = depth
+        self.parameters = Parameters()
 
     @property
     def name(self):
@@ -31,15 +44,38 @@ class Slifer(Bot):
         # closest_candy = min(np.linalg.norm(snake[0] - c, 1) for c in candies)
         # player_distance = abs(player[0][0] - opponent[0][0]) + abs(player[0][1] - opponent[0][1])
 
-        if length_margin > 10:
+        if length_margin > self.parameters.battle_mode_stop + self.parameters.battle_mode_margin:
             self.battle_mode = True
-        elif length_margin < 5:
+        elif length_margin < self.parameters.battle_mode_stop:
             self.battle_mode = False
 
         if self.battle_mode:
             return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_battle)
         else:
             return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_eating)
+
+
+class Hybrid(Bot):
+    def __init__(self, id: int, grid_size: Tuple[int, int], depth=0):
+        super().__init__(id=id, grid_size=grid_size)
+        self.battle_mode = False
+        self.depth = depth
+        self.parameters = Parameters()
+
+    @property
+    def name(self):
+        return 'Hybrid'
+
+    @property
+    def contributor(self):
+        return 'Rayman'
+
+    def determine_next_move(self, snake, other_snakes, candies) -> Move:
+        player = FastSnake(id=snake.id, positions=snake.positions)
+        opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
+
+        return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth,
+                               partial(eat_and_battle, parameters=self.parameters))
 
 
 class Slifer0(Slifer):
