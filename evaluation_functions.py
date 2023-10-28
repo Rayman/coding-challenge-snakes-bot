@@ -164,9 +164,9 @@ def terminal_value(node: TerminalNode) -> float:
     opponent_score = len(node.opponent)
     # print(f'player {self.player.id} survives player_score={player_score} opponent_score={opponent_score}')
     if player_score > opponent_score:
-        return 99
+        return 999
     elif player_score < opponent_score:
-        return -99
+        return -999
     else:
         return 50
 
@@ -232,15 +232,20 @@ def calculate_new_candy_bonus(player_dist, opponent_dist, candies: List[np.array
     else:
         # all candies are closer to the other player. Choose another candy, still a chance to eat it
         # print("player can't reach all candies")
-        player_candy_bonus = 16 - min((np.linalg.norm(candies[i] - player_head)
-                                       for i in range(len(candies)) if i != opponent_candy_index), default=16)
+
+        furthest = max((i for i in range(len(candies)) if i != opponent_candy_index),
+                       key=lambda i: opponent_dist[tuple(candies[i])])
+        player_candy_bonus = 16 - np.linalg.norm(player_head - candies[furthest])
+        # raise
 
     if opponent_dist[tuple(candies[opponent_candy_index])] != int_max:
         opponent_candy_bonus = 40 - opponent_dist[tuple(candies[opponent_candy_index])]
     else:
         # all candies are closer to the other player. Choose another candy, still a chance to eat it
         # print("opponent can't reach all candies")
-        opponent_candy_bonus = 16 - min((np.linalg.norm(candies[i] - opponent_head)
-                                         for i in range(len(candies)) if i != player_candy_index), default=16)
+        furthest = max((i for i in range(len(candies)) if i != player_candy_index),
+                       key=lambda i: player_dist[tuple(candies[i])])
+        opponent_candy_bonus = 16 - np.linalg.norm(opponent_head - candies[furthest])
+
     # print(f'player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
     return player_candy_bonus - opponent_candy_bonus

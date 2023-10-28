@@ -16,8 +16,8 @@ class Parameters:
     battle_mode_stop: int = 5  # length margin lower than this will enable eating mode
     battle_mode_margin: int = 5  # battle mode starts at battle_mode_stop + battle_mode_margin
 
-    candy_bonus_scaling: float = 1
-    voronoi_heuristic_scaling: float = 0.1
+    candy_bonus_scaling: float = 0.028536411462084695
+    voronoi_heuristic_scaling: float = 9.170870384542528
     voronoi_max: float = 20
 
 

@@ -41,7 +41,7 @@ class TestCorner:
         moves = dict(search_function(self.grid_size, self.player, self.opponent, self.candies, 0))
         round_values(moves)
         print(moves)
-        assert moves[Move.UP] == -99
+        assert moves[Move.UP] == -999
         assert moves[Move.DOWN] == 1
         assert Move.LEFT not in moves
         assert moves[Move.RIGHT] == 0
@@ -52,8 +52,8 @@ class TestCorner:
         moves = dict(search_function(self.grid_size, self.player, self.opponent, self.candies, 1))
         round_values(moves)
         print(moves)
-        assert moves[Move.UP] == -99
-        assert moves[Move.DOWN] == -99
+        assert moves[Move.UP] == -999
+        assert moves[Move.DOWN] == -999
         assert Move.LEFT not in moves
         assert moves[Move.RIGHT] == -1
 
@@ -62,8 +62,8 @@ class TestCorner:
         moves = dict(search_function(self.grid_size, self.player, self.opponent, self.candies, 2))
         round_values(moves)
         print(moves)
-        assert moves[Move.UP] == -99
-        assert moves[Move.DOWN] == -99
+        assert moves[Move.UP] == -999
+        assert moves[Move.DOWN] == -999
         assert Move.LEFT not in moves
         assert moves[Move.RIGHT] == -1
 
@@ -261,7 +261,7 @@ def test_suicide(evaluation_function):
     moves = dict(_negamax_moves(grid_size, player, opponent, candies, 0, evaluation_function))
     print(moves)
 
-    assert moves[Move.LEFT] == 99
+    assert moves[Move.LEFT] == 999
     assert moves[Move.LEFT] > moves[Move.DOWN]
 
 
