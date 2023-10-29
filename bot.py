@@ -15,10 +15,13 @@ __all__ = ['Slifer']
 class Parameters:
     battle_mode_stop: int = 5  # length margin lower than this will enable eating mode
     battle_mode_margin: int = 5  # battle mode starts at battle_mode_stop + battle_mode_margin
+    eating_mode_stop: int = 8
 
-    candy_bonus_scaling: float = 0.028536411462084695
-    voronoi_heuristic_scaling: float = 9.170870384542528
-    voronoi_max: float = 20
+    # candy_bonus_scaling: float = 0.028536411462084695
+    # voronoi_heuristic_scaling: float = 9.170870384542528
+    candy_bonus_scaling: float = 0.057882554498856466
+    voronoi_heuristic_scaling: float = 0.07149628090500665
+    voronoi_max: float = 25
 
 
 class Slifer(Bot):
@@ -74,8 +77,11 @@ class Hybrid(Bot):
         player = FastSnake(id=snake.id, positions=snake.positions)
         opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
 
-        return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth,
-                               partial(eat_and_battle, parameters=self.parameters))
+        if len(player) >= self.parameters.eating_mode_stop:
+            return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth,
+                                   partial(eat_and_battle, parameters=self.parameters))
+        else:
+            return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_eating)
 
 
 class Slifer0(Slifer):
