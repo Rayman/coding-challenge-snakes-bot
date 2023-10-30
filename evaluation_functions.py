@@ -104,16 +104,19 @@ def eat_and_battle(node: Node, parameters):
 
     length_difference = 10 * (len(node.player) - len(node.opponent))
 
-    candy_bonus = calculate_new_candy_bonus(new_player_dist, new_opponent_dist, node.candies, node.player[0],
+    candy_bonus = calculate_new_candy_bonus(new_player_dist.filled(), new_opponent_dist.filled(), node.candies, node.player[0],
                                             node.opponent[0])
     candy_bonus = 10 * candy_bonus / 40
 
+    # print(f'length player={len(node.player)} opponent={len(node.opponent)}')
     # print(f'area player={new_player_dist.count()} opponent={new_opponent_dist.count()}')
-    # print(f'voronoi_difference={voronoi_difference} voronoi_heuristic={voronoi_heuristic:.2f}')
-    # print(f'voronoi={voronoi_heuristic:5.2f}\t{parameters.voronoi_heuristic_scaling * voronoi_heuristic:7.2f}')
-    # print(f'candy_bonus={candy_bonus:5.2f}{parameters.candy_bonus_scaling * candy_bonus:6.2f}')
-    # print(f'length_diff={length_difference:11}')
-    return length_difference + parameters.candy_bonus_scaling * candy_bonus + parameters.voronoi_heuristic_scaling * voronoi_heuristic
+    # print(f'voronoi_difference={voronoi_difference:.2f} voronoi_heuristic={voronoi_heuristic:.2f}')
+    # print(f'voronoi={voronoi_heuristic:5.2f}\t{parameters.candy_voronoi_scaling * voronoi_heuristic:7.2f}')
+    # print(f'candy_bonus={candy_bonus:5.2f}{(1 - parameters.candy_voronoi_scaling) * candy_bonus:6.2f}')
+    # print(f'length_diff={length_difference:5}{parameters.length_scaling * length_difference:6.2f}')
+    return (parameters.length_scaling * length_difference
+            + (1 - parameters.candy_voronoi_scaling) * candy_bonus
+            + parameters.candy_voronoi_scaling * voronoi_heuristic)
 
 
 def calculate_voronoi_diagram(collision_grid, player_head, opponent_head):
@@ -232,20 +235,20 @@ def calculate_new_candy_bonus(player_dist, opponent_dist, candies: List[np.array
     else:
         # all candies are closer to the other player. Choose another candy, still a chance to eat it
         # print("player can't reach all candies")
-
-        furthest = max((i for i in range(len(candies)) if i != opponent_candy_index),
-                       key=lambda i: opponent_dist[tuple(candies[i])])
-        player_candy_bonus = 16 - np.linalg.norm(player_head - candies[furthest])
-        # raise
+        # furthest = max((i for i in range(len(candies)) if i != opponent_candy_index),
+        #                key=lambda i: opponent_dist[tuple(candies[i])])
+        # player_candy_bonus = 16 - np.linalg.norm(player_head - candies[furthest])
+        player_candy_bonus = 0
 
     if opponent_dist[tuple(candies[opponent_candy_index])] != int_max:
         opponent_candy_bonus = 40 - opponent_dist[tuple(candies[opponent_candy_index])]
     else:
         # all candies are closer to the other player. Choose another candy, still a chance to eat it
         # print("opponent can't reach all candies")
-        furthest = max((i for i in range(len(candies)) if i != player_candy_index),
-                       key=lambda i: player_dist[tuple(candies[i])])
-        opponent_candy_bonus = 16 - np.linalg.norm(opponent_head - candies[furthest])
+        # furthest = max((i for i in range(len(candies)) if i != player_candy_index),
+        #                key=lambda i: player_dist[tuple(candies[i])])
+        # opponent_candy_bonus = 16 - np.linalg.norm(opponent_head - candies[furthest])
+        opponent_candy_bonus = 0
 
     # print(f'player_candy_bonus={player_candy_bonus} opponent_candy_bonus={opponent_candy_bonus}')
     return player_candy_bonus - opponent_candy_bonus
