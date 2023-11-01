@@ -15,13 +15,13 @@ __all__ = ['Slifer']
 class Parameters:
     battle_mode_stop: int = 5  # length margin lower than this will enable eating mode
     battle_mode_margin: int = 5  # battle mode starts at battle_mode_stop + battle_mode_margin
-    eating_mode_stop: int = 8
 
-    # candy_bonus_scaling: float = 0.028536411462084695
-    # voronoi_heuristic_scaling: float = 9.170870384542528
-    candy_bonus_scaling: float = 0.057882554498856466
-    voronoi_heuristic_scaling: float = 0.07149628090500665
+    eating_mode_stop: int = 8  # length when to stop eating mode and switch to eating_and_battle
+    # candy_voronoi_scaling: float = 0.18587348196111586  # Prefer candy (0) vs voronoi (1)
+    candy_voronoi_scaling: float = 0.9  # Prefer candy (0) vs voronoi (1)
     voronoi_max: float = 25
+    # length_scaling: float = 0.5460890971075978
+    length_scaling: float = 0.3
 
 
 class Slifer(Bot):
@@ -82,6 +82,24 @@ class Hybrid(Bot):
                                    partial(eat_and_battle, parameters=self.parameters))
         else:
             return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_eating)
+
+
+class Hybrid1(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=1)
+
+    @property
+    def name(self):
+        return 'Hybrid1'
+
+
+class Hybrid2(Slifer):
+    def __init__(self, id: int, grid_size: Tuple[int, int]):
+        super().__init__(id=id, grid_size=grid_size, depth=2)
+
+    @property
+    def name(self):
+        return 'Hybrid2'
 
 
 class Slifer0(Slifer):
