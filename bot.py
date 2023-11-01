@@ -1,8 +1,10 @@
+import json
+import os.path
 from dataclasses import dataclass
 from functools import partial
 from typing import Tuple
 
-from .evaluation_functions import prefer_eating, prefer_battle, eat_and_battle
+from .evaluation_functions import prefer_eating, prefer_battle, eat_and_battle, snek_evaluate
 from .search_functions import negamax_ab_move
 from .snake import FastSnake
 from ...bot import Bot
@@ -82,6 +84,28 @@ class Hybrid(Bot):
                                    partial(eat_and_battle, parameters=self.parameters))
         else:
             return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth, prefer_eating)
+
+
+class SnekClone(Bot):
+    def __init__(self, id: int, grid_size: Tuple[int, int], depth=0):
+        super().__init__(id=id, grid_size=grid_size)
+        self.depth = depth
+        with open(os.path.join(os.path.dirname(__file__), 'territory.json')) as f:
+            self.territory = json.load(f)
+
+    @property
+    def name(self):
+        return 'SnekClone'
+
+    @property
+    def contributor(self):
+        return 'Rayman'
+
+    def determine_next_move(self, snake, other_snakes, candies) -> Move:
+        player = FastSnake(id=snake.id, positions=snake.positions)
+        opponent = FastSnake(id=other_snakes[0].id, positions=other_snakes[0].positions)
+        return negamax_ab_move(self.grid_size, player, opponent, candies, self.depth,
+                               partial(snek_evaluate, territory=self.territory))
 
 
 class Hybrid1(Slifer):

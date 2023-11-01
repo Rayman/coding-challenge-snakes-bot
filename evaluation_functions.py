@@ -119,6 +119,47 @@ def eat_and_battle(node: Node, parameters):
             + parameters.candy_voronoi_scaling * voronoi_heuristic)
 
 
+def snek_evaluate(node: Node, territory):
+    # length
+    score = 20000 * (len(node.player) - len(node.opponent))
+    # candy dist
+    score -= 10 * sum(
+        np.linalg.norm(np.array(node.player[0]) - candy_pos, 1) - np.linalg.norm(np.array(node.opponent[0]) - candy_pos,
+                                                                                 1)
+        for candy_pos in node.candies)
+
+    # candy mode
+    if len(node.player) < 12:
+        return score
+
+    collision_grid = np.zeros(node.grid_size, dtype=bool)
+    for segment in node.player:
+        collision_grid[segment[0], segment[1]] = True
+    for segment in node.opponent:
+        collision_grid[segment[0], segment[1]] = True
+    new_player_dist, new_opponent_dist = calculate_voronoi_diagram(collision_grid, node.player[0], node.opponent[0])
+
+    # print(f'player_dist={new_player_dist.count()} opponent_dist={new_opponent_dist.count()}')
+    fs1, fs0 = new_player_dist.count(), new_opponent_dist.count()
+    delta_space = fs0 - fs1
+
+    # print(f'delta_space={delta_space} fs1={fs1} fs0={fs0}')
+    # print(f'territory bonus={int(10000 * log(fs0 / fs1))}')
+    score -= int(10000 * log(fs0 / fs1))
+
+    # positional bonus
+    DELTA_TERRITORY = territory
+
+    p1_pos = node.player[0][0] * 18 + node.player[0][1] + 19
+    p2_pos = node.opponent[0][0] * 18 + node.opponent[0][1] + 19
+    # print(f'p1_pos={p1_pos} p2_pos={p2_pos}')
+    board_bonus = -100 * DELTA_TERRITORY[p1_pos][p2_pos]
+    # print(f'board bonus={board_bonus}')
+    score -= board_bonus
+    # print(f'score={score}')
+    return score
+
+
 def calculate_voronoi_diagram(collision_grid, player_head, opponent_head):
     voronoi = dijkstra2(((player_head, 0), (opponent_head, 1)), collision_grid)
     max_int = np.iinfo(voronoi.dtype).max
