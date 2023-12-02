@@ -44,7 +44,7 @@ def main(match):
         print(f"Shape of y: {y.shape} {y.dtype}")
         break
 
-    model = NeuralNetwork(4)
+    model = NeuralNetwork(512)
 
     loss_fn = nn.MSELoss()
     learning_rate = 1e-3
@@ -60,7 +60,15 @@ def main(match):
 
 
 def record_to_observation(record: Record):
-    return Tensor(np.concatenate((record.player[0], record.opponent[0])))
+    player = torch.zeros((16, 16))
+    for segment in record.player:
+        player[tuple(segment)] = 1
+    opponent = torch.zeros((16, 16))
+    for segment in record.opponent:
+        opponent[tuple(segment)] = 1
+
+    # return Tensor(np.concatenate((record.player[0], record.opponent[0])))
+    return Tensor(np.concatenate((player.flatten(), opponent.flatten())))
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, writer, epoch):
