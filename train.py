@@ -1,37 +1,24 @@
 #!/usr/bin/env python3
+import pickle
+import sys
 from argparse import ArgumentParser, FileType
-from copy import deepcopy
-from dataclasses import dataclass
-from random import randint
-from typing import List, Dict
+from typing import Dict
 
 import numpy as np
 import torch
-import yaml
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
-from ...game import RoundType
-from ...replay import ReplayReader
-from ...snake import Snake
-
-
-@dataclass
-class Record:
-    player: Snake
-    opponent: Snake
-    candies: List[np.array]
-    winner: int
+from .parse_matches import Record
 
 
 def main(match):
-    records = load_records(match)
-
+    records = pickle.load(match)
     dataset = []
     for record in records:
         dataset.append((record_to_observation(record), Tensor([record.winner])))
+    del records
 
     train_dataset, test_dataset = random_split(dataset, (0.9, 0.1))
 
@@ -50,7 +37,7 @@ def main(match):
     learning_rate = 1e-3
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-    epochs = 10
+    epochs = 100
     writer = SummaryWriter()
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1}\n-------------------------------")
@@ -61,11 +48,9 @@ def main(match):
 
 def record_to_observation(record: Record):
     player = torch.zeros((16, 16))
-    for segment in record.player:
-        player[tuple(segment)] = 1
     opponent = torch.zeros((16, 16))
-    for segment in record.opponent:
-        opponent[tuple(segment)] = 1
+    player[tuple(record.player.positions.T)] = 1
+    opponent[tuple(record.opponent.positions.T)] = 1
 
     # return Tensor(np.concatenate((record.player[0], record.opponent[0])))
     return Tensor(np.concatenate((player.flatten(), opponent.flatten())))
@@ -120,36 +105,6 @@ def test_loop(dataloader, model, loss_fn, writer, epoch):
     writer.add_scalar('Accuracy/test', 100 * correct, tb_x)
 
 
-def load_records(match):
-    docs = tqdm(yaml.safe_load_all(match))
-    docs.set_description('Loading matches')
-    docs = list(docs)
-
-    records = []
-    docs = tqdm(docs)
-    docs.set_description('Processing matches')
-    sample = 2
-    for doc in docs:
-        for state in ReplayReader(doc).states():
-            player_rank = doc['rank'][state.turn]
-            opponent_rank = doc['rank'][(state.turn + 1) % 2]
-            winner = 1 if player_rank < opponent_rank else -1 if player_rank > opponent_rank else 0
-            if sample > 1:
-                # Downsample, using only 1/Nth of the items
-                if randint(0, sample - 1) != 0:
-                    continue  # Skip this record
-                assert state.round_type == RoundType.TURNS
-                assert len(state.snakes) == 2
-                player = state.snakes[state.turn]
-                opponent = state.snakes[(state.turn + 1) % 2]
-                if player is None or opponent is None:
-                    continue
-                records.append(
-                    Record(player=deepcopy(player), opponent=deepcopy(opponent), candies=deepcopy(state.candies),
-                           winner=winner))
-    return records
-
-
 class NeuralNetwork(nn.Module):
     def __init__(self, feature_dim: int):
         super().__init__()
@@ -164,9 +119,30 @@ class NeuralNetwork(nn.Module):
         return self.linear_relu(observations)
 
 
+def get_size(obj, seen=None):
+    """Recursively finds size of objects"""
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+        size += sum([get_size(i, seen) for i in obj])
+    return size
+
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Replay a match')
-    parser.add_argument('match', type=FileType('r'), help="Input match database")
+    parser.add_argument('match', type=FileType('rb'), help="Input match database")
     args = parser.parse_args()
 
     try:
