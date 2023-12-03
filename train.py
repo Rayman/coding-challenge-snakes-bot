@@ -43,14 +43,15 @@ def main(match):
         print(f"Epoch {epoch + 1}\n-------------------------------")
         train_loop(train_dataloader, model, loss_fn, optimizer, writer, epoch)
         test_loop(test_dataloader, model, loss_fn, writer, epoch)
+        torch.save(model.state_dict(), f'model_{epoch}.pth')
     print('Done!')
 
 
 def record_to_observation(record: Record):
     player = torch.zeros((16, 16))
     opponent = torch.zeros((16, 16))
-    player[tuple(record.player.positions.T)] = 1
-    opponent[tuple(record.opponent.positions.T)] = 1
+    player[tuple(np.array(record.player.positions).T)] = 1
+    opponent[tuple(np.array(record.opponent.positions).T)] = 1
 
     # return Tensor(np.concatenate((record.player[0], record.opponent[0])))
     return Tensor(np.concatenate((player.flatten(), opponent.flatten())))
